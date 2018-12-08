@@ -19,7 +19,8 @@ class TestFrequency {
         Never to LocalDate.of(9999, 12, 31),
         Monthly(31) to LocalDate.of(2010, 1, 31),
         Yearly(3, 31) to LocalDate.of(2010, 3, 31),
-        Irregular(11, 4, DayOfWeek.THURSDAY) to LocalDate.of(2010, 11, 25)
+        Irregular(11, 4, DayOfWeek.THURSDAY) to LocalDate.of(2010, 11, 25),
+        Once(2010, 1, 31) to LocalDate.of(2010, 1, 31)
     )
         .map { (frequency: Frequency, expected: LocalDate) ->
             DynamicTest.dynamicTest("given today is $referenceDate, when the frequency is $frequency, " +

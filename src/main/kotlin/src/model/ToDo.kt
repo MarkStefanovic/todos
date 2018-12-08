@@ -62,7 +62,7 @@ data class ToDo(
 
     private val frequencyType: Frequency
         get() = when (frequency) {
-            "Once" -> Once(year = LocalDate.now().year, month = month, monthday = monthday)
+            "Once" -> Once(year = year, month = month, monthday = monthday)
             "Daily" -> Daily
             "Weekly" -> Weekly(weekday = DayOfWeek.of(weekday))
             "Monthly" -> Monthly(monthday = monthday)
