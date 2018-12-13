@@ -20,12 +20,13 @@ class TestFrequency {
         Monthly(31) to LocalDate.of(2010, 1, 31),
         Yearly(3, 31) to LocalDate.of(2010, 3, 31),
         Irregular(11, 4, DayOfWeek.THURSDAY) to LocalDate.of(2010, 11, 25),
-        Once(2010, 1, 31) to LocalDate.of(2010, 1, 31)
+        Once(2010, 1, 31) to LocalDate.of(2010, 1, 31),
+        Easter to LocalDate.of(2010, 4, 4)
     )
         .map { (frequency: Frequency, expected: LocalDate) ->
             DynamicTest.dynamicTest("given today is $referenceDate, when the frequency is $frequency, " +
                                         "then the nextDate should be $expected") {
-                assertEquals(expected, getNextDates(frequency, referenceDate = referenceDate))
+                assertEquals(expected, frequency.nextDate(referenceDate = referenceDate))
             }
         }
 

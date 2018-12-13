@@ -68,6 +68,7 @@ data class ToDo(
             "Monthly" -> Monthly(monthday = monthday)
             "Yearly" -> Yearly(monthValue = month, dayOfMonth = monthday)
             "Irregular" -> Irregular(monthValue = month, weekNumber = weekNumber, weekday = DayOfWeek.of(weekday))
+            "Easter" -> Easter
             else -> Never
         }
 
@@ -81,13 +82,12 @@ data class ToDo(
         )
 
     val nextDate: LocalDate
-        get() = getNextDates(
-            frequency = frequencyType,
+        get() = frequencyType.nextDate(
             expireDays = expireDays,
             referenceDate = (
                 if (dateCompleted >= LocalDate.now()) dateCompleted
                 else LocalDate.now()
-                )
+            )
         )
 
     val onceDate: LocalDate
@@ -138,11 +138,16 @@ val holidays: List<ToDo> = listOf(
     ToDo.default().copy(description = "Thanksgiving", frequency = "Irregular", month = 11, weekNumber = 4,
                           weekday = DayOfWeek.THURSDAY.value, advanceNotice = 14, expireDays = 3),
     ToDo.default().copy(description = "Christmas", frequency = "Yearly", month = 12, monthday = 25,
-                          advanceNotice = 14, expireDays = 1),
+                          advanceNotice = 14, expireDays = 3),
     ToDo.default().copy(description = "Fathers Day", frequency = "Irregular", month = 6, weekNumber = 3,
-                          weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 5),
+                          weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 3),
     ToDo.default().copy(description = "Mothers Day", frequency = "Irregular", month = 5, weekNumber = 2,
-                          weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 5)
+                          weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 3),
+    ToDo.default().copy(description = "Labor Day", frequency = "Irregular", month = 9, weekNumber = 1,
+                        weekday = DayOfWeek.MONDAY.value, advanceNotice = 14, expireDays = 3),
+    ToDo.default().copy(description = "New Year's", frequency = "Yearly", month = 1, monthday = 1,
+                        advanceNotice = 14, expireDays = 3),
+    ToDo.default().copy(description = "Easter", frequency = "Easter", advanceNotice = 14, expireDays = 3)
 )
 
 /** Should the item be displayed on today's to-do list?*/
