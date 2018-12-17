@@ -64,7 +64,7 @@ class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo)
 
                 field("Day of Month") {
                     maxWidth = 200.0
-                    monthdayField = integerPrefixSelector(initialValue = todo.monthday, minValue = 1, maxValue = 28)
+                    monthdayField = integerPrefixSelector(initialValue = todo.monthday, minValue = 1, maxValue = 31)
                 }.bindToChildVisibility(monthdayField)
 
                 field("Date") {
@@ -111,16 +111,46 @@ class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo)
                 graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply { glyphSize = 18.0 }
                 isDefaultButton = true
                 action {
-                    val newToDo = todo.copy(
-                        description = descriptionField.text,
-                        frequency = frequencyField.value,
-                        advanceNotice = advanceNoticeField.value,
-                        expireDays = expireDaysField.value,
-                        month = onceField.value.monthValue,
-                        monthday = onceField.value.dayOfMonth,
-                        weekday = getWeekdayByName(weekdayField.value),
-                        year = onceField.value.year
-                    )
+                    val newToDo = when (frequencyField.value) {
+                        "Once" -> ToDo.default().copy(
+                            description = descriptionField.text,
+                            frequency = frequencyField.value,
+                            advanceNotice = advanceNoticeField.value,
+                            expireDays = expireDaysField.value,
+                            month = onceField.value.monthValue,
+                            monthday = onceField.value.dayOfMonth,
+                            year = onceField.value.year
+                        )
+                        "Daily" -> ToDo.default().copy(
+                            description = descriptionField.text,
+                            frequency = frequencyField.value,
+                            advanceNotice = 0,
+                            expireDays = 1
+                        )
+                        "Weekly" -> ToDo.default().copy(
+                            description = descriptionField.text,
+                            frequency = frequencyField.value,
+                            advanceNotice = advanceNoticeField.value,
+                            expireDays = expireDaysField.value,
+                            weekday = getWeekdayByName(weekdayField.value)
+                        )
+                        "Monthly" -> ToDo.default().copy(
+                            description = descriptionField.text,
+                            frequency = frequencyField.value,
+                            advanceNotice = advanceNoticeField.value,
+                            expireDays = expireDaysField.value,
+                            monthday = monthdayField.value
+                        )
+                        "Yearly" -> ToDo.default().copy(
+                            description = descriptionField.text,
+                            frequency = frequencyField.value,
+                            advanceNotice = advanceNoticeField.value,
+                            expireDays = expireDaysField.value,
+                            month = monthField.value,
+                            monthday = monthdayField.value
+                        )
+                        else -> throw NotImplementedError()
+                    }
                     if (mode == "Edit") {
                         scope.toDoController.updateRequest.onNext(newToDo)
                     } else {
