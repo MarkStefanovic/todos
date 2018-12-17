@@ -65,23 +65,24 @@ class ToDoController(
         }
     }
 
-    override fun refresh() {
+    override fun refresh(token: String) {
         db.execute {
             ToDos.selectAll()
                 .map { it.toToDo() }
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
         }?.let {
-            refreshResponse.onNext(it)
+            refreshResponse.onNext(Pair(token, it))
         }
     }
 
-    override fun filter(query: Query) {
+    override fun filter(request: Pair<String, Query>) {
+        val (token, query) = request
         db.execute {
             query
                 .map { it.toToDo() }
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
-        }?.let {
-            filterResponse.onNext(it)
+        }?.let { todos ->
+            filterResponse.onNext(Pair(token, todos))
         }
     }
 

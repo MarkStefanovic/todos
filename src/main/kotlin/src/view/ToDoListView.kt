@@ -25,18 +25,23 @@ class ToDoListView : View("ToDos") {
 
     private val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            scope.toDoController.refreshRequest.onNext(Unit)
+            scope.toDoController.refreshRequest.onNext("ToDoListView")
         }
     }
 
     private val filter = SimpleStringProperty().apply {
         onChange { description ->
             if (description.isNullOrBlank())
-                scope.toDoController.refreshRequest.onNext(Unit)
+                scope.toDoController.refreshRequest.onNext("ToDoListView")
             else
-                scope.toDoController.filterRequest.onNext(ToDos.select {
-                    ToDos.description.lowerCase() like "%${ description!!.toLowerCase() }%"
-                })
+                scope.toDoController.filterRequest.onNext(
+                    Pair(
+                        "ToDoListView",
+                        ToDos.select {
+                            ToDos.description.lowerCase() like "%${ description!!.toLowerCase() }%"
+                        }
+                    )
+                )
         }
         scope.toDoController.refreshResponse.subscribe { value = "" }
     }
@@ -84,21 +89,25 @@ class ToDoListView : View("ToDos") {
                     onError = ::alertError
                 )
                 scope.toDoController.refreshResponse.subscribeBy(
-                    onNext = {
-                        if (todayOnly.value) {
-                            items.setAll(it.filter { todo -> todo.display })
-                        } else {
-                            items.setAll(it)
+                    onNext = { (token, todos) ->
+                        if (token == "ToDoListView") {
+                            if (todayOnly.value) {
+                                items.setAll(todos.filter { todo -> todo.display })
+                            } else {
+                                items.setAll(todos)
+                            }
                         }
                     },
                     onError = ::alertError
                 )
                 scope.toDoController.filterResponse.subscribeBy(
-                    onNext = {
-                        if (todayOnly.value) {
-                            items.setAll(it.filter { todo -> todo.display })
-                        } else {
-                            items.setAll(it)
+                    onNext = { (token, todos) ->
+                        if (token == "ToDoListView") {
+                            if (todayOnly.value) {
+                                items.setAll(todos.filter { todo -> todo.display })
+                            } else {
+                                items.setAll(todos)
+                            }
                         }
                     },
                     onError = ::alertError
@@ -121,7 +130,7 @@ class ToDoListView : View("ToDos") {
                     },
                     onError = ::alertError
                 )
-                scope.toDoController.refreshRequest.onNext(Unit)
+                scope.toDoController.refreshRequest.onNext("ToDoListView")
             }
         }
 
@@ -163,7 +172,7 @@ class ToDoListView : View("ToDos") {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply { glyphSize = 14.0 }
                     tooltip("Refresh ToDos (CTRL + R)")
                     shortcut("Ctrl+R")
-                    action { scope.toDoController.refreshRequest.onNext(Unit) }
+                    action { scope.toDoController.refreshRequest.onNext("ToDoListView") }
                 }
                 editButton = button {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply { glyphSize = 14.0 }

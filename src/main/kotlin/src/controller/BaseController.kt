@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit
 abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) : Controller() {
     companion object : KLogging()
 
-    val refreshRequest = PublishSubject.create<Unit>()
-    val refreshResponse = PublishSubject.create<List<T>>().apply {
+    val refreshRequest = PublishSubject.create<String>()
+    val refreshResponse = PublishSubject.create<Pair<String, List<T>>>().apply {
         observeOn(schedulerProvider.ui())
     }
     val addRequest = PublishSubject.create<T>()
@@ -27,8 +27,8 @@ abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) 
     val updateResponse = PublishSubject.create<T>().apply {
         observeOn(schedulerProvider.ui())
     }
-    val filterRequest = PublishSubject.create<Query>()
-    val filterResponse = PublishSubject.create<List<T>>().apply {
+    val filterRequest = PublishSubject.create<Pair<String, Query>>()
+    val filterResponse = PublishSubject.create<Pair<String, List<T>>>().apply {
         observeOn(schedulerProvider.ui())
     }
 
@@ -42,7 +42,7 @@ abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) 
             onError = { logger.error(it.message) }
         )
         refreshRequest.subscribeOn(schedulerProvider.io()).debounce(200, TimeUnit.MILLISECONDS).subscribeBy (
-            onNext = { refresh() },
+            onNext = ::refresh,
             onError = { logger.error(it.message) }
         )
         updateRequest.subscribeOn(schedulerProvider.io()).subscribeBy (
@@ -61,7 +61,7 @@ abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) 
 
     abstract fun update(item: T)
 
-    abstract fun refresh()
+    abstract fun refresh(token: String)
 
-    abstract fun filter(query: Query)
+    abstract fun filter(request: Pair<String, Query>)
 }
