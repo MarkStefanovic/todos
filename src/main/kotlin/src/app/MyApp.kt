@@ -52,7 +52,8 @@ class MyApp: App(MainView::class, Styles::class) {
     }
 
     override fun start(stage: Stage) {
-        addStageIcon(Image("/app.png"))
+        val img = Image("file:app.png")
+        addStageIcon(img)
         super.start(stage)
     }
 }

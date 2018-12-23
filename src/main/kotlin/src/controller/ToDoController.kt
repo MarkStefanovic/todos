@@ -1,5 +1,7 @@
 package src.controller
 
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
 import org.jetbrains.exposed.sql.*
 import src.app.Db
 import src.app.toJodaDateTime
@@ -34,10 +36,22 @@ class ToDoController(
     }
 
     override fun delete(id: Int) {
-        db.execute {
-            ToDos.deleteWhere { ToDos.id eq id }
+        byId(id)?.let { todo ->
+            Alert(
+                Alert.AlertType.WARNING,
+                "Are you sure you want to delete '${todo.description}'?",
+                ButtonType.YES,
+                ButtonType.NO
+            ).apply {
+                showAndWait()
+                if (result == ButtonType.YES) {
+                    db.execute {
+                        ToDos.deleteWhere { ToDos.id eq id }
+                    }
+                    deleteResponse.onNext(id)
+                }
+            }
         }
-        deleteResponse.onNext(id)
     }
 
     override fun update(item: ToDo) {
@@ -70,8 +84,8 @@ class ToDoController(
             ToDos.selectAll()
                 .map { it.toToDo() }
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
-        }?.let {
-            refreshResponse.onNext(Pair(token, it))
+        }?.let { todos ->
+            refreshResponse.onNext(token to todos)
         }
     }
 
@@ -82,7 +96,7 @@ class ToDoController(
                 .map { it.toToDo() }
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
         }?.let { todos ->
-            filterResponse.onNext(Pair(token, todos))
+            filterResponse.onNext(token to todos)
         }
     }
 

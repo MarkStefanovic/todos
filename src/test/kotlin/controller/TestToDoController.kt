@@ -58,13 +58,17 @@ class TestToDoController {
 
     @Test
     fun testRefreshRequest() {
-        val testObserver = TestObserver<List<ToDo>>()
+        val testObserver = TestObserver<Pair<String, List<ToDo>>>()
 
         controller.refreshResponse.subscribe(testObserver)
-        controller.refreshRequest.onNext(Unit)
+        controller.refreshRequest.onNext("test")
         testObserver.awaitCount(1)
-        testObserver.assertValue { todos -> todos.any { todo -> todo.description == "Thanksgiving" } }
-        testObserver.assertValue { it.isUnique() }
+        testObserver.assertValue { (token, todos) ->
+            todos.any { todo -> todo.description == "Thanksgiving" }
+        }
+        testObserver.assertValue { (_, todos) ->
+            todos.isUnique()
+        }
     }
 
     @Test

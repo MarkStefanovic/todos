@@ -30,12 +30,13 @@ class MockToDoController: BaseController<ToDo>(TrampolineSchedulerProvider()) {
         updateResponse.onNext(item)
     }
 
-    override fun refresh() {
-        refreshResponse.onNext(todos)
+    override fun refresh(token: String) {
+        refreshResponse.onNext(token to todos)
     }
 
-    override fun filter(query: Query) {
+    override fun filter(request: Pair<String, Query>) {
+        val (token, query) = request
         currentQuery = query
-        filterResponse.onNext(todos)
+        filterResponse.onNext(token to todos)
     }
 }

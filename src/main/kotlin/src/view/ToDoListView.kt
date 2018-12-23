@@ -23,7 +23,17 @@ class ToDoListView : View("ToDos") {
 
     override val scope = super.scope as AppScope
 
-    private val todayOnly = SimpleBooleanProperty(true).apply {
+    // Control handles for testing
+    var table: TableView<ToDo> by singleAssign()
+    var addButton: Button by singleAssign()
+    var deleteButton: Button by singleAssign()
+    var refreshButton: Button by singleAssign()
+    var editButton: Button by singleAssign()
+    var filterText: TextField by singleAssign()
+    var todayCheckbox: CheckBox by singleAssign()
+    var deleteConfirmation: Alert? = null
+
+    val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
             scope.toDoController.refreshRequest.onNext("ToDoListView")
         }
@@ -35,26 +45,13 @@ class ToDoListView : View("ToDos") {
                 scope.toDoController.refreshRequest.onNext("ToDoListView")
             else
                 scope.toDoController.filterRequest.onNext(
-                    Pair(
-                        "ToDoListView",
-                        ToDos.select {
-                            ToDos.description.lowerCase() like "%${ description!!.toLowerCase() }%"
-                        }
-                    )
+                    "ToDoListView" to ToDos.select {
+                        ToDos.description.lowerCase() like "%${ description.toLowerCase() }%"
+                    }
                 )
         }
         scope.toDoController.refreshResponse.subscribe { value = "" }
     }
-
-    // Control handles for testing
-    var table: TableView<ToDo> by singleAssign()
-    var addButton: Button by singleAssign()
-    var deleteButton: Button by singleAssign()
-    var refreshButton: Button by singleAssign()
-    var editButton: Button by singleAssign()
-    var filterText: TextField by singleAssign()
-    var todayCheckbox: CheckBox by singleAssign()
-    var deleteConfirmation: Alert? = null
 
     override val root = borderpane {
         paddingAll = 4
@@ -155,15 +152,7 @@ class ToDoListView : View("ToDos") {
                     shortcut("Ctrl+X")
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
-                            deleteConfirmation = Alert(
-                                Alert.AlertType.WARNING,
-                                "Are you sure you want to delete '${todo.description}'?",
-                                ButtonType.YES,
-                                ButtonType.NO
-                            )
-                            deleteConfirmation!!.showAndWait()
-                            if (deleteConfirmation!!.result == ButtonType.YES)
-                                scope.toDoController.deleteRequest.onNext(todo.id)
+                            scope.toDoController.deleteRequest.onNext(todo.id)
                         }
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)

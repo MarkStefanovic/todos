@@ -29,37 +29,29 @@ class TestToDoListView {
 
     @Test
     fun `refresh should display initial rows`() {
-        val testObserver = TestObserver<List<ToDo>>()
+        listView.todayOnly.value = false
+        val testObserver = TestObserver<Pair<String, List<ToDo>>>()
         testController.refreshResponse.subscribe(testObserver)
-        testController.refreshRequest.onNext(Unit)
-        testObserver.awaitCount(1)
-
-        val expectedRows = listView.table.items.count()
-        Assertions.assertEquals(expectedRows, 3)
+        testController.refreshRequest.onNext("ToDoListView")
+        testObserver.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
+        Assertions.assertEquals(testController.todos.count(), listView.table.items.count())
     }
 
     @Test
     fun `delete button should delete selected item`() {
+        listView.todayOnly.value = false
+
         val testObserver = TestObserver<Int>()
         testController.deleteResponse.subscribe(testObserver)
 
-        testController.refresh()
+        testController.refresh("ToDoListView")
         listView.table.selectWhere { it.id == 2 }
+        Assertions.assertEquals(listView.table.selectedItem?.id, 2)
         Platform.runLater {
             listView.deleteButton.fire()
         }
-        // wait for delete confirmation dialog to open
-        Thread.sleep(100)
 
-        Assertions.assertNotNull(
-            listView.deleteConfirmation,
-            "A confirmation dialog should have opened to confirm deletion."
-        )
-        Platform.runLater {
-            val okButton = listView.deleteConfirmation!!.dialogPane.lookupButton(ButtonType.YES) as Button
-            okButton.fire()
-        }
-        testObserver.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
+        testObserver.awaitCount(1)
         testObserver.assertValue(2)
         Assertions.assertNull(listView.table.items.find { it.id == 2 })
         val expectedRows = listView.table.items.count()
