@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.insert
 import src.controller.SchedulerProvider
 import src.controller.ToDoController
 import src.model.ToDos
+import src.model.birthdays
 import src.model.holidays
 import src.view.MainView
 import tornadofx.*
@@ -33,8 +34,8 @@ class MyApp: App(MainView::class, Styles::class) {
         db.execute {
             if (!ToDos.exists()) {
                 SchemaUtils.create(ToDos)
-
-                holidays.forEach { todo ->
+                val initialRecords = holidays.union(birthdays)
+                initialRecords.forEach { todo ->
                     ToDos.insert {
                         it[description] = todo.description
                         it[frequency] = todo.frequency

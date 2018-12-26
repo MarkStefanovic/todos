@@ -133,8 +133,8 @@ fun ResultRow.toToDo() = ToDo(
     advanceNotice = this[ToDos.advanceNotice]
 )
 
-/** list of initial sql records used on new db initialization */
-val holidays: List<ToDo> = listOf(
+/** initial holidays to add the the db */
+val holidays: Set<ToDo> = setOf(
     ToDo.default().copy(description = "Thanksgiving", frequency = "Irregular", month = 11, weekNumber = 4,
                           weekday = DayOfWeek.THURSDAY.value, advanceNotice = 14, expireDays = 3),
     ToDo.default().copy(description = "Christmas", frequency = "Yearly", month = 12, monthday = 25,
@@ -148,6 +148,27 @@ val holidays: List<ToDo> = listOf(
     ToDo.default().copy(description = "New Year's", frequency = "Yearly", month = 1, monthday = 1,
                         advanceNotice = 14, expireDays = 3),
     ToDo.default().copy(description = "Easter", frequency = "Easter", advanceNotice = 14, expireDays = 3)
+)
+/** initial birthdays to add the the db */
+val birthdays: Set<ToDo> = setOf(
+    ToDo.default().copy(description = "Fathers Day", frequency = "Irregular", month = 6, weekNumber = 3,
+                        weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 5),
+    ToDo.default().copy(description = "Mothers Day", frequency = "Irregular", month = 5, weekNumber = 2,
+                        weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 5),
+    ToDo.default().copy(description = "Jessie's Birthday", frequency = "Yearly", month = 8, monthday = 24,
+                        advanceNotice = 30, expireDays = 7),
+    ToDo.default().copy(description = "Sarah's Birthday", frequency = "Yearly", month = 9, monthday = 2,
+                        advanceNotice = 30, expireDays = 7),
+    ToDo.default().copy(description = "Emma's Birthday", frequency = "Yearly", month = 10, monthday = 10,
+                        advanceNotice = 30, expireDays = 7),
+    ToDo.default().copy(description = "Dad's Birthday", frequency = "Yearly", month = 11, monthday = 20,
+                        advanceNotice = 30, expireDays = 7),
+    ToDo.default().copy(description = "Kellen's Birthday", frequency = "Yearly", month = 3, monthday = 30,
+                        advanceNotice = 30, expireDays = 7),
+    ToDo.default().copy(description = "Mandie's Birthday", frequency = "Yearly", month = 5, monthday = 13,
+                        advanceNotice = 30, expireDays = 7),
+    ToDo.default().copy(description = "Summer's Birthday", frequency = "Yearly", month = 2, monthday = 24,
+                        advanceNotice = 30, expireDays = 7)
 )
 
 /** Should the item be displayed on today's to-do list?*/
