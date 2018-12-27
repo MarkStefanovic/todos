@@ -72,6 +72,16 @@ class ToDoListView : View("ToDos") {
                 }
                 (column("Complete", ToDo::complete) as TableColumn<ToDo, Boolean?>).useCheckbox(editable = true)
 
+                rowExpander { todo ->
+                    prefHeight = 95.0
+                    textarea(todo.note).apply {
+                        isEditable = false
+                        expandedProperty().onChange { extended ->
+                            if (extended) this.text = todo.note
+                        }
+                    }
+                }
+
                 onEditCommit {
                     scope.toDoController.updateRequest.onNext(it)
                 }

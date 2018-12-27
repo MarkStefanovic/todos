@@ -3,6 +3,7 @@ package src.model
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.joda.time.DateTime
+import src.app.logger
 import src.app.toJavaLocalDate
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -21,7 +22,10 @@ data class ToDo(
     val dateAdded : LocalDate,
     var dateCompleted : LocalDate,
     val expireDays : Int,
-    val advanceNotice : Int
+    val advanceNotice : Int,
+    val startDate : LocalDate,
+    val days : Int,
+    val note : String
 ) {
     companion object {
         val NONE_DATE = LocalDate.of(1970, 1, 1)
@@ -40,7 +44,10 @@ data class ToDo(
                 dateAdded = today,
                 dateCompleted = NONE_DATE,
                 expireDays = 90,
-                advanceNotice = 0
+                advanceNotice = 0,
+                startDate = today,
+                days = 1,
+                note = ""
             )
         }
     }
@@ -69,6 +76,7 @@ data class ToDo(
             "Yearly" -> Yearly(monthValue = month, dayOfMonth = monthday)
             "Irregular" -> Irregular(monthValue = month, weekNumber = weekNumber, weekday = DayOfWeek.of(weekday))
             "Easter" -> Easter
+            "XDays" -> XDays(startDate = startDate, days = days)
             else -> Never
         }
 
@@ -116,22 +124,35 @@ object ToDos: Table() {
     val dateCompleted = date("date_completed").default(DateTime.parse("1970-01-01"))
     val expireDays = integer("expire_days").default(5)
     val advanceNotice = integer("advance_notice").default(0)
+    val startDate = date("start_date").default(DateTime.parse("1970-01-01"))
+    val days = integer("days").default(0)
+    val note = text("note").default("")
 }
 
-fun ResultRow.toToDo() = ToDo(
-    id = this[ToDos.id],
-    description = this[ToDos.description],
-    frequency = this[ToDos.frequency],
-    month = this[ToDos.month],
-    weekday = this[ToDos.weekday],
-    monthday = this[ToDos.monthday],
-    year = this[ToDos.year],
-    weekNumber = this[ToDos.weekNumber],
-    dateAdded = this[ToDos.dateAdded].toJavaLocalDate(),
-    dateCompleted = this[ToDos.dateCompleted].toJavaLocalDate(),
-    expireDays = this[ToDos.expireDays],
-    advanceNotice = this[ToDos.advanceNotice]
-)
+fun ResultRow.toToDo() =
+    try {
+        ToDo(
+            id = this[ToDos.id],
+            description = this[ToDos.description],
+            frequency = this[ToDos.frequency],
+            month = this[ToDos.month],
+            weekday = this[ToDos.weekday],
+            monthday = this[ToDos.monthday],
+            year = this[ToDos.year],
+            weekNumber = this[ToDos.weekNumber],
+            dateAdded = this[ToDos.dateAdded].toJavaLocalDate(),
+            dateCompleted = this[ToDos.dateCompleted].toJavaLocalDate(),
+            expireDays = this[ToDos.expireDays],
+            advanceNotice = this[ToDos.advanceNotice],
+            startDate = this[ToDos.startDate].toJavaLocalDate(),
+            days = this[ToDos.days],
+            note = this[ToDos.note]
+        )
+    } catch (e: Exception) {
+        logger.error { "There was an error converting the row $this to a ToDo: $e" }
+        ToDo.default()
+    }
+
 
 /** initial holidays to add the the db */
 val holidays: Set<ToDo> = setOf(

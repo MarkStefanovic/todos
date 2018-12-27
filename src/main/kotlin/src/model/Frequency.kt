@@ -2,6 +2,7 @@ package src.model
 
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 
 sealed class Frequency {
@@ -57,6 +58,16 @@ data class Yearly(val monthValue: Int, val dayOfMonth: Int) : Frequency() {
         )
 
     override fun toString() = "every $dayOfMonth day of month $monthValue"
+}
+
+data class XDays(val startDate: LocalDate, val days: Int) : Frequency() {
+    override fun nextDate(expireDays: Int, referenceDate: LocalDate): LocalDate {
+        val daysFromStart = ChronoUnit.DAYS.between(startDate, referenceDate)
+        val modDays = daysFromStart.rem(days)
+        val prior = referenceDate.minusDays(modDays)
+        val next = referenceDate.plusDays(days - modDays)
+        return if (prior.plusDays(expireDays.toLong()) > referenceDate) next else prior
+    }
 }
 
 data class Irregular(val monthValue: Int, val weekNumber: Int, val weekday: DayOfWeek) : Frequency() {

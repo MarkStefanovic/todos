@@ -25,8 +25,11 @@ class ToDoController(
                 it[month] = newItem.month
                 it[year] = newItem.year
                 it[weekNumber] = newItem.weekNumber
+                it[startDate] = newItem.startDate.toJodaDateTime()
+                it[days] = newItem.days
                 it[expireDays] = newItem.expireDays
                 it[advanceNotice] = newItem.advanceNotice
+                it[note] = newItem.note
             } get ToDos.id
         }?.let { id ->
             byId(id)?.let {
@@ -69,8 +72,11 @@ class ToDoController(
                     it[weekNumber] = item.weekNumber
                     it[dateAdded] = item.dateAdded.toJodaDateTime()
                     it[dateCompleted] = item.dateCompleted.toJodaDateTime()
+                    it[startDate] = item.startDate.toJodaDateTime()
+                    it[days] = item.days
                     it[expireDays] = item.expireDays
                     it[advanceNotice] = item.advanceNotice
+                    it[note] = item.note
                 }
             }
             byId(item.id)?.let { updated ->
