@@ -5,6 +5,7 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView
 import io.reactivex.rxkotlin.subscribeBy
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.stage.Modality
 import mu.KLogging
@@ -14,8 +15,10 @@ import src.app.AppScope
 import src.app.Styles.Companion.centerAlignedCell
 import src.app.alertError
 import src.model.ToDo
+import src.model.ToDo.Companion.NONE_DATE
 import src.model.ToDos
 import tornadofx.*
+import java.time.LocalDate
 
 
 class ToDoListView : View("ToDos") {
@@ -70,7 +73,24 @@ class ToDoListView : View("ToDos") {
                 readonlyColumn("Due", ToDo::nextDate) {
                     addClass(centerAlignedCell)
                 }
-                (column("Complete", ToDo::complete) as TableColumn<ToDo, Boolean?>).useCheckbox(editable = true)
+                readonlyColumn("Complete", ToDo::item) {
+                    cellFormat { todo ->
+                        graphic = hbox {
+                            alignment = Pos.CENTER_RIGHT
+                            checkbox("", todo.complete.toProperty()) {
+                                action {
+                                    val dateCompleted =
+                                        if (todo.complete)
+                                            NONE_DATE
+                                        else
+                                            LocalDate.now()
+                                    val updatedToDo = todo.copy(dateCompleted = dateCompleted)
+                                    scope.toDoController.updateRequest.onNext(updatedToDo)
+                                }
+                            }
+                        }
+                    }
+                }
 
                 rowExpander { todo ->
                     prefHeight = 95.0
@@ -82,9 +102,9 @@ class ToDoListView : View("ToDos") {
                     }
                 }
 
-                onEditCommit {
-                    scope.toDoController.updateRequest.onNext(it)
-                }
+//                onEditCommit {
+//                    scope.toDoController.updateRequest.onNext(it)
+//                }
                 scope.toDoController.addResponse.subscribeBy(
                     onNext = {
                         if (todayOnly.value) {

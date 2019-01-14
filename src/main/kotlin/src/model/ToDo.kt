@@ -20,7 +20,7 @@ data class ToDo(
     val year : Int,
     val weekNumber : Int,
     val dateAdded : LocalDate,
-    var dateCompleted : LocalDate,
+    val dateCompleted : LocalDate,
     val expireDays : Int,
     val advanceNotice : Int,
     val startDate : LocalDate,
@@ -101,14 +101,11 @@ data class ToDo(
     val onceDate: LocalDate
         get() = LocalDate.of(year, month, monthday)
 
-    var complete: Boolean
+    val complete: Boolean
         get() = !display and (dateCompleted != NONE_DATE)
-        set(value) {
-            dateCompleted = (
-                if (value) LocalDate.now()
-                else NONE_DATE
-            )
-        }
+
+    val item: ToDo
+        get() = this
 }
 
 object ToDos: Table() {
