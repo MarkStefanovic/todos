@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.select
 import src.app.AppScope
 import src.app.Styles.Companion.centerAlignedCell
 import src.app.alertError
+import src.controller.SignalSource
 import src.model.ToDo
 import src.model.ToDo.Companion.NONE_DATE
 import src.model.ToDos
@@ -38,17 +39,17 @@ class ToDoListView : View("ToDos") {
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            scope.toDoController.refreshRequest.onNext("ToDoListView")
+            scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
         }
     }
 
     private val filter = SimpleStringProperty().apply {
         onChange { description ->
             if (description.isNullOrBlank())
-                scope.toDoController.refreshRequest.onNext("ToDoListView")
+                scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
             else
                 scope.toDoController.filterRequest.onNext(
-                    "ToDoListView" to ToDos.select {
+                    SignalSource.TODO_LIST_VIEW to ToDos.select {
                         ToDos.description.lowerCase() like "%${ description.toLowerCase() }%"
                     }
                 )
@@ -116,8 +117,8 @@ class ToDoListView : View("ToDos") {
                     onError = ::alertError
                 )
                 scope.toDoController.refreshResponse.subscribeBy(
-                    onNext = { (token, todos) ->
-                        if (token == "ToDoListView") {
+                    onNext = { (source, todos) ->
+                        if (source == SignalSource.TODO_LIST_VIEW) {
                             if (todayOnly.value) {
                                 items.setAll(todos.filter { todo -> todo.display })
                             } else {
@@ -128,8 +129,8 @@ class ToDoListView : View("ToDos") {
                     onError = ::alertError
                 )
                 scope.toDoController.filterResponse.subscribeBy(
-                    onNext = { (token, todos) ->
-                        if (token == "ToDoListView") {
+                    onNext = { (source, todos) ->
+                        if (source == SignalSource.TODO_LIST_VIEW) {
                             if (todayOnly.value) {
                                 items.setAll(todos.filter { todo -> todo.display })
                             } else {
@@ -157,7 +158,7 @@ class ToDoListView : View("ToDos") {
                     },
                     onError = ::alertError
                 )
-                scope.toDoController.refreshRequest.onNext("ToDoListView")
+                scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
             }
         }
 
@@ -191,7 +192,7 @@ class ToDoListView : View("ToDos") {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply { glyphSize = 14.0 }
                     tooltip("Refresh ToDos (CTRL + R)")
                     shortcut("Ctrl+R")
-                    action { scope.toDoController.refreshRequest.onNext("ToDoListView") }
+                    action { scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW) }
                 }
                 editButton = button {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply { glyphSize = 14.0 }

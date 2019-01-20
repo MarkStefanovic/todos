@@ -15,7 +15,7 @@ import java.time.LocalDate
 
 
 val FREQUENCIES = listOf("Once", "Daily", "Weekly", "Monthly", "Yearly", "XDays")
-val WEEKDAYS = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+val WEEKDAY_NAMES = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo) : Fragment() {
     var advanceNoticeField: PrefixSelectionComboBox<Int> by singleAssign()
@@ -57,7 +57,7 @@ class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo)
                     )
                 }
                 field("Weekday") {
-                    weekdayField = stringPrefixSelector(todo.weekdayName, WEEKDAYS)
+                    weekdayField = stringPrefixSelector(todo.weekdayName, WEEKDAY_NAMES)
                 }.bindToChildVisibility(weekdayField)
 
                 field("Month") {

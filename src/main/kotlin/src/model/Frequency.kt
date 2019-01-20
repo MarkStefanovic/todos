@@ -66,7 +66,11 @@ data class XDays(val startDate: LocalDate, val days: Int) : Frequency() {
         val modDays = daysFromStart.rem(days)
         val prior = referenceDate.minusDays(modDays)
         val next = referenceDate.plusDays(days - modDays)
-        return if (prior.plusDays(expireDays.toLong()) > referenceDate) next else prior
+        return when {
+            referenceDate == startDate -> startDate
+            prior.plusDays(expireDays.toLong()) > referenceDate -> next
+            else -> prior
+        }
     }
 }
 

@@ -4,12 +4,11 @@ import helpers.MockToDoController
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import javafx.application.Platform
-import javafx.scene.control.Button
-import javafx.scene.control.ButtonType
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
 import src.app.AppScope
+import src.controller.SignalSource
 import src.model.ToDo
 import src.view.ToDoListView
 import tornadofx.*
@@ -30,9 +29,9 @@ class TestToDoListView {
     @Test
     fun `refresh should display initial rows`() {
         listView.todayOnly.value = false
-        val testObserver = TestObserver<Pair<String, List<ToDo>>>()
+        val testObserver = TestObserver<Pair<SignalSource, List<ToDo>>>()
         testController.refreshResponse.subscribe(testObserver)
-        testController.refreshRequest.onNext("ToDoListView")
+        testController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
         testObserver.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
         Assertions.assertEquals(testController.todos.count(), listView.table.items.count())
     }
@@ -44,7 +43,7 @@ class TestToDoListView {
         val testObserver = TestObserver<Int>()
         testController.deleteResponse.subscribe(testObserver)
 
-        testController.refresh("ToDoListView")
+        testController.refresh(SignalSource.TODO_LIST_VIEW)
         listView.table.selectWhere { it.id == 2 }
         Assertions.assertEquals(listView.table.selectedItem?.id, 2)
         Platform.runLater {

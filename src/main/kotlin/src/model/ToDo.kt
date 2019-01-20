@@ -169,10 +169,6 @@ val holidays: Set<ToDo> = setOf(
 )
 /** initial birthdays to add the the db */
 val birthdays: Set<ToDo> = setOf(
-    ToDo.default().copy(description = "Fathers Day", frequency = "Irregular", month = 6, weekNumber = 3,
-                        weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 5),
-    ToDo.default().copy(description = "Mothers Day", frequency = "Irregular", month = 5, weekNumber = 2,
-                        weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 5),
     ToDo.default().copy(description = "Jessie's Birthday", frequency = "Yearly", month = 8, monthday = 24,
                         advanceNotice = 30, expireDays = 7),
     ToDo.default().copy(description = "Sarah's Birthday", frequency = "Yearly", month = 9, monthday = 2,

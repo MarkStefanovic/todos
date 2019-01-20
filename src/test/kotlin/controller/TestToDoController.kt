@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.Executable
 import src.app.Db
+import src.controller.SignalSource
 import src.controller.ToDoController
 import src.model.ToDo
 import src.model.ToDos
@@ -58,12 +59,12 @@ class TestToDoController {
 
     @Test
     fun testRefreshRequest() {
-        val testObserver = TestObserver<Pair<String, List<ToDo>>>()
+        val testObserver = TestObserver<Pair<SignalSource, List<ToDo>>>()
 
         controller.refreshResponse.subscribe(testObserver)
-        controller.refreshRequest.onNext("test")
+        controller.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
         testObserver.awaitCount(1)
-        testObserver.assertValue { (token, todos) ->
+        testObserver.assertValue { (source, todos) ->
             todos.any { todo -> todo.description == "Thanksgiving" }
         }
         testObserver.assertValue { (_, todos) ->
