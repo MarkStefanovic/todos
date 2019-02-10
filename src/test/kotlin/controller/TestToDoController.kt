@@ -22,10 +22,9 @@ import java.time.LocalDate
 fun <T>Iterable<T>.isUnique() = this.toSet().count() == this.count()
 
 
-//@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class TestToDoController {
 
-    private val db = Db(url = "jdbc:sqlite:mem:test;DB_CLOSE_DELAY=-1", driver = "org.sqlite.JDBC").apply {
+    private val db = Db(url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver").apply {
         execute {
             if (!ToDos.exists()) {
                 SchemaUtils.create(ToDos)
@@ -41,6 +40,7 @@ class TestToDoController {
                         it[weekNumber] = todo.weekNumber
                         it[expireDays] = todo.expireDays
                         it[advanceNotice] = todo.advanceNotice
+                        it[displayArea] = todo.displayArea
                     }
                 }
             }
@@ -54,8 +54,9 @@ class TestToDoController {
 
     private fun byDescription(description: String) =
         db.execute {
-            ToDos.select { ToDos.description eq description }.firstOrNull()
-        }?.toToDo() ?: ToDo.default()
+            ToDos.select { ToDos.description eq description }
+            .firstOrNull()?.toToDo()
+        } ?: ToDo.default()
 
     @Test
     fun testRefreshRequest() {
@@ -75,8 +76,10 @@ class TestToDoController {
     @Test
     fun testAddRequest() {
         val testObserver = TestObserver<ToDo>()
-        val todo = ToDo.default().copy(description = "Test", frequency = "Once", month = 10, monthday = 23,
-                                               year = 2018)
+        val todo = ToDo.default().copy(
+            description = "Test", frequency = "Once", month = 10, monthday = 23, year = 2018,
+            displayArea = "Reminders"
+        )
         controller.addRequest.subscribe(testObserver)
         controller.addRequest.onNext(todo)
         testObserver.awaitCount(1)

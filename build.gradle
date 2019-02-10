@@ -56,7 +56,7 @@ dependencies {
     testCompile "org.testfx:testfx-core:4.0.14-alpha"
     testCompile "org.testfx:testfx-junit:4.0.14-alpha"
     testCompile "org.testfx:testfx-junit5:4.0.14-alpha"
-
+    testCompile "com.h2database:h2:1.4.197"
 
     // db
     compile "org.jetbrains.exposed:exposed:0.10.4"

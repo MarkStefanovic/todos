@@ -5,4 +5,7 @@ import src.model.ToDo
 import tornadofx.*
 
 
-class AppScope(val toDoController: BaseController<ToDo>): Scope()
+class AppScope(
+    val toDoController : BaseController<ToDo>,
+    val reminderController : BaseController<ToDo>
+) : Scope()

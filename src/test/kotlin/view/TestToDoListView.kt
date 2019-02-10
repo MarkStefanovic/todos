@@ -7,7 +7,6 @@ import javafx.application.Platform
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
-import src.app.AppScope
 import src.controller.SignalSource
 import src.model.ToDo
 import src.view.ToDoListView
@@ -18,20 +17,18 @@ import tornadofx.*
 class TestToDoListView {
     private val stage = FxToolkit.registerPrimaryStage()
     private val testController = MockToDoController()
-    private val appScope = AppScope(toDoController = testController)
-    private val listView = find(ToDoListView::class, appScope)
-
-    @Test
-    fun `title should be ToDos`() {
-        Assertions.assertEquals("ToDos", listView.title)
-    }
+    private val listView = ToDoListView(
+       controller = testController,
+       displayArea = "Reminders"
+    )
+//    private val listView = find(ToDoListView::class, appScope)
 
     @Test
     fun `refresh should display initial rows`() {
         listView.todayOnly.value = false
         val testObserver = TestObserver<Pair<SignalSource, List<ToDo>>>()
         testController.refreshResponse.subscribe(testObserver)
-        testController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
+        testController.refreshRequest.onNext(SignalSource.REMINDER_LIST_VIEW)
         testObserver.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
         Assertions.assertEquals(testController.todos.count(), listView.table.items.count())
     }
@@ -43,7 +40,7 @@ class TestToDoListView {
         val testObserver = TestObserver<Int>()
         testController.deleteResponse.subscribe(testObserver)
 
-        testController.refresh(SignalSource.TODO_LIST_VIEW)
+        testController.refresh(SignalSource.REMINDER_LIST_VIEW)
         listView.table.selectWhere { it.id == 2 }
         Assertions.assertEquals(listView.table.selectedItem?.id, 2)
         Platform.runLater {

@@ -16,42 +16,45 @@ import java.time.LocalDate
 class TestToDoEditor {
     private val stage = FxToolkit.registerPrimaryStage()
     private val testController = MockToDoController()
-    private val appScope = AppScope(toDoController = testController)
     private val testObserver = TestObserver<ToDo>()
     private val today = LocalDate.now()
     private val yearlyToDo = ToDo.default().copy(
         description = "Test",
         frequency = "Yearly",
         month = 10,
-        monthday = 12
+        monthday = 12,
+        displayArea = "Reminders"
     )
 
     @Test
-    fun `title is 'Add ToDo' when mode is 'Add'`() {
+    fun `title is 'Add Reminders' when mode is 'Add' and displayArea is 'Reminders'`() {
         val editor = ToDoEditor(
-            scope = appScope,
+            controller = testController,
             mode = "Add",
-            todo = ToDo.default()
+            todo = ToDo.default(),
+            displayArea = "Reminders"
         )
-        assertEquals(editor.title, "Add New ToDo")
+        assertEquals(editor.title, "Add New Reminders")
     }
 
     @Test
-    fun `title is 'Edit ToDo' when mode is 'Edit'`() {
+    fun `title is 'Edit Reminders' when mode is 'Edit' and displayArea is 'Reminders'`() {
         val editor = ToDoEditor(
-            scope = appScope,
+            controller = testController,
             mode = "Edit",
-            todo = ToDo.default()
+            todo = ToDo.default(),
+            displayArea = "Reminders"
         )
-        assertEquals(editor.title, "Edit ToDo")
+        assertEquals(editor.title, "Edit Reminders")
     }
 
     @Test
     fun `correct defaults on Add mode`() {
         val editor = ToDoEditor(
-            scope = appScope,
+            controller = testController,
             mode = "Edit",
-            todo = ToDo.default()
+            todo = ToDo.default(),
+            displayArea = "Reminders"
         )
         assertEquals("Once", editor.frequencyField.value)
         assertEquals(today, editor.onceField.value)
@@ -63,9 +66,10 @@ class TestToDoEditor {
     @Test
     fun `fields set on 'Edit' mode match passed todo passed in`() {
         val editor = ToDoEditor(
-            scope = appScope,
+            controller = testController,
             mode = "Edit",
-            todo = yearlyToDo
+            todo = yearlyToDo,
+            displayArea = "Reminders"
         )
         assertEquals("Test", editor.descriptionField.text)
         assertEquals("Yearly", editor.frequencyField.value)
@@ -78,9 +82,10 @@ class TestToDoEditor {
     @Test
     fun `todo edited matches state of form`() {
         val editor = ToDoEditor(
-            scope = appScope,
+            controller = testController,
             mode = "Edit",
-            todo = yearlyToDo
+            todo = yearlyToDo,
+            displayArea = "Reminders"
         )
         testController.updateResponse.subscribe(testObserver)
         editor.saveButton.fire()

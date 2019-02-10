@@ -9,7 +9,10 @@ import java.util.concurrent.TimeUnit
 
 
 enum class SignalSource {
-    TODO_EDITOR, TODO_LIST_VIEW
+    REMINDER_EDITOR,
+    REMINDER_LIST_VIEW,
+    TODO_EDITOR,
+    TODO_LIST_VIEW,
 }
 
 abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) : Controller() {

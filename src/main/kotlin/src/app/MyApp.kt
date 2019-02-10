@@ -18,16 +18,22 @@ val logger = KotlinLogging.logger { }
 
 
 class MyApp: App(MainView::class, Styles::class) {
-    val db = Db(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
-
+    private val db = Db(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
+    private val scheduler = SchedulerProvider()
+    private val toDoController = ToDoController(
+        db = db,
+        schedulerProvider = scheduler
+    )
+    private val reminderController = ToDoController(
+        db = db,
+        schedulerProvider = scheduler
+    )
     init {
         logger.debug("Starting App")
 
         scope = AppScope(
-            toDoController = ToDoController(
-                db = db,
-                schedulerProvider = SchedulerProvider()
-            )
+            toDoController = toDoController,
+            reminderController = reminderController
         )
 
         // insert initial sql rows if creating new db
@@ -46,6 +52,7 @@ class MyApp: App(MainView::class, Styles::class) {
                         it[weekNumber] = todo.weekNumber
                         it[expireDays] = todo.expireDays
                         it[advanceNotice] = todo.advanceNotice
+                        it[displayArea] = todo.displayArea
                     }
                 }
             }

@@ -10,9 +10,18 @@ class MockToDoController: BaseController<ToDo>(TrampolineSchedulerProvider()) {
     var currentQuery: Query? = null
 
     val todos = mutableListOf(
-        ToDo.default().copy(id = 1, frequency = "Once", description = "Test1", year = 2010, month = 10, monthday = 1),
-        ToDo.default().copy(id = 2, frequency = "Once", description = "Test2", year = 2010, month = 10, monthday = 2),
-        ToDo.default().copy(id = 3, frequency = "Once", description = "Test3", year = 2010, month = 10, monthday = 3)
+        ToDo.default().copy(
+            id = 1, frequency = "Once", description = "Test1", year = 2010, month = 10, monthday = 1,
+            displayArea = "Reminders"
+        ),
+        ToDo.default().copy(
+            id = 2, frequency = "Once", description = "Test2", year = 2010, month = 10, monthday = 2,
+            displayArea = "Reminders"
+        ),
+        ToDo.default().copy(
+            id = 3, frequency = "Once", description = "Test3", year = 2010, month = 10, monthday = 3,
+            displayArea = "Reminders"
+        )
     )
 
     override fun add(newItem: ToDo) {

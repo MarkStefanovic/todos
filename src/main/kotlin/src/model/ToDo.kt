@@ -25,7 +25,8 @@ data class ToDo(
     val advanceNotice : Int,
     val startDate : LocalDate,
     val days : Int,
-    val note : String
+    val note : String,
+    val displayArea : String
 ) {
     companion object {
         val NONE_DATE = LocalDate.of(1970, 1, 1)
@@ -47,7 +48,8 @@ data class ToDo(
                 advanceNotice = 0,
                 startDate = today,
                 days = 1,
-                note = ""
+                note = "",
+                displayArea = "ToDos"
             )
         }
     }
@@ -124,6 +126,7 @@ object ToDos: Table() {
     val startDate = date("start_date").default(DateTime.parse("1970-01-01"))
     val days = integer("days").default(0)
     val note = text("note").default("")
+    val displayArea = text("display_area").default("ToDos")
 }
 
 fun ResultRow.toToDo() =
@@ -143,7 +146,8 @@ fun ResultRow.toToDo() =
             advanceNotice = this[ToDos.advanceNotice],
             startDate = this[ToDos.startDate].toJavaLocalDate(),
             days = this[ToDos.days],
-            note = this[ToDos.note]
+            note = this[ToDos.note],
+            displayArea = this[ToDos.displayArea]
         )
     } catch (e: Exception) {
         logger.error { "There was an error converting the row $this to a ToDo: $e" }
@@ -153,36 +157,63 @@ fun ResultRow.toToDo() =
 
 /** initial holidays to add the the db */
 val holidays: Set<ToDo> = setOf(
-    ToDo.default().copy(description = "Thanksgiving", frequency = "Irregular", month = 11, weekNumber = 4,
-                          weekday = DayOfWeek.THURSDAY.value, advanceNotice = 14, expireDays = 3),
-    ToDo.default().copy(description = "Christmas", frequency = "Yearly", month = 12, monthday = 25,
-                          advanceNotice = 14, expireDays = 3),
-    ToDo.default().copy(description = "Fathers Day", frequency = "Irregular", month = 6, weekNumber = 3,
-                          weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 3),
-    ToDo.default().copy(description = "Mothers Day", frequency = "Irregular", month = 5, weekNumber = 2,
-                          weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 3),
-    ToDo.default().copy(description = "Labor Day", frequency = "Irregular", month = 9, weekNumber = 1,
-                        weekday = DayOfWeek.MONDAY.value, advanceNotice = 14, expireDays = 3),
-    ToDo.default().copy(description = "New Year's", frequency = "Yearly", month = 1, monthday = 1,
-                        advanceNotice = 14, expireDays = 3),
-    ToDo.default().copy(description = "Easter", frequency = "Easter", advanceNotice = 14, expireDays = 3)
+    ToDo.default().copy(
+        description = "Thanksgiving", frequency = "Irregular", month = 11, weekNumber = 4,
+        weekday = DayOfWeek.THURSDAY.value, advanceNotice = 14, expireDays = 3, displayArea = "Reminders"),
+    ToDo.default().copy(
+        description = "Christmas", frequency = "Yearly", month = 12, monthday = 25, advanceNotice = 14, expireDays = 3,
+        displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Fathers Day", frequency = "Irregular", month = 6, weekNumber = 3,
+        weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 3, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Mothers Day", frequency = "Irregular", month = 5, weekNumber = 2,
+        weekday = DayOfWeek.SUNDAY.value, advanceNotice = 14, expireDays = 3, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Labor Day", frequency = "Irregular", month = 9, weekNumber = 1,
+        weekday = DayOfWeek.MONDAY.value, advanceNotice = 14, expireDays = 3, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "New Year's", frequency = "Yearly", month = 1, monthday = 1, advanceNotice = 14, expireDays = 3,
+        displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Easter", frequency = "Easter", advanceNotice = 14, expireDays = 3, displayArea = "Reminders"
+    )
 )
 /** initial birthdays to add the the db */
 val birthdays: Set<ToDo> = setOf(
-    ToDo.default().copy(description = "Jessie's Birthday", frequency = "Yearly", month = 8, monthday = 24,
-                        advanceNotice = 30, expireDays = 7),
-    ToDo.default().copy(description = "Sarah's Birthday", frequency = "Yearly", month = 9, monthday = 2,
-                        advanceNotice = 30, expireDays = 7),
-    ToDo.default().copy(description = "Emma's Birthday", frequency = "Yearly", month = 10, monthday = 10,
-                        advanceNotice = 30, expireDays = 7),
-    ToDo.default().copy(description = "Dad's Birthday", frequency = "Yearly", month = 11, monthday = 20,
-                        advanceNotice = 30, expireDays = 7),
-    ToDo.default().copy(description = "Kellen's Birthday", frequency = "Yearly", month = 3, monthday = 30,
-                        advanceNotice = 30, expireDays = 7),
-    ToDo.default().copy(description = "Mandie's Birthday", frequency = "Yearly", month = 5, monthday = 13,
-                        advanceNotice = 30, expireDays = 7),
-    ToDo.default().copy(description = "Summer's Birthday", frequency = "Yearly", month = 2, monthday = 24,
-                        advanceNotice = 30, expireDays = 7)
+    ToDo.default().copy(
+        description = "Jessie's Birthday", frequency = "Yearly", month = 8, monthday = 24, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Sarah's Birthday", frequency = "Yearly", month = 9, monthday = 2, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Emma's Birthday", frequency = "Yearly", month = 10, monthday = 10,  advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Dad's Birthday", frequency = "Yearly", month = 11, monthday = 20, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Kellen's Birthday", frequency = "Yearly", month = 3, monthday = 30, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Mandie's Birthday", frequency = "Yearly", month = 5, monthday = 13, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
+        description = "Summer's Birthday", frequency = "Yearly", month = 2, monthday = 24, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    )
 )
 
 /** Should the item be displayed on today's to-do list?*/

@@ -11,9 +11,9 @@ import javafx.stage.Modality
 import mu.KLogging
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.select
-import src.app.AppScope
 import src.app.Styles.Companion.centerAlignedCell
 import src.app.alertError
+import src.controller.BaseController
 import src.controller.SignalSource
 import src.model.ToDo
 import src.model.ToDo.Companion.NONE_DATE
@@ -22,10 +22,19 @@ import tornadofx.*
 import java.time.LocalDate
 
 
-class ToDoListView : View("ToDos") {
+class ToDoListView(
+    val controller : BaseController<ToDo>,
+    val displayArea : String
+) : View() {
+
     companion object: KLogging()
 
-    override val scope = super.scope as AppScope
+    val signalSource =
+        if (displayArea == "ToDos") {
+            SignalSource.TODO_LIST_VIEW
+        } else {
+            SignalSource.REMINDER_LIST_VIEW
+        }
 
     // Control handles for testing
     var table: TableView<ToDo> by singleAssign()
@@ -39,22 +48,26 @@ class ToDoListView : View("ToDos") {
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
+            controller.refreshRequest.onNext(signalSource)
         }
     }
 
     private val filter = SimpleStringProperty().apply {
         onChange { description ->
             if (description.isNullOrBlank())
-                scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
+                controller.refreshRequest.onNext(signalSource)
             else
-                scope.toDoController.filterRequest.onNext(
-                    SignalSource.TODO_LIST_VIEW to ToDos.select {
+                controller.filterRequest.onNext(
+                    signalSource to ToDos.select {
                         ToDos.description.lowerCase() like "%${ description.toLowerCase() }%"
                     }
                 )
         }
-        scope.toDoController.refreshResponse.subscribe { value = "" }
+        controller.refreshResponse.subscribe { value = "" }
+    }
+
+    init {
+        title = displayArea
     }
 
     override val root = borderpane {
@@ -86,7 +99,7 @@ class ToDoListView : View("ToDos") {
                                         else
                                             LocalDate.now()
                                     val updatedToDo = todo.copy(dateCompleted = dateCompleted)
-                                    scope.toDoController.updateRequest.onNext(updatedToDo)
+                                    controller.updateRequest.onNext(updatedToDo)
                                 }
                             }
                         }
@@ -103,10 +116,7 @@ class ToDoListView : View("ToDos") {
                     }
                 }
 
-//                onEditCommit {
-//                    scope.toDoController.updateRequest.onNext(it)
-//                }
-                scope.toDoController.addResponse.subscribeBy(
+                controller.addResponse.subscribeBy(
                     onNext = {
                         if (todayOnly.value) {
                             if (it.display) items.add(it)
@@ -116,35 +126,43 @@ class ToDoListView : View("ToDos") {
                     },
                     onError = ::alertError
                 )
-                scope.toDoController.refreshResponse.subscribeBy(
-                    onNext = { (source, todos) ->
-                        if (source == SignalSource.TODO_LIST_VIEW) {
-                            if (todayOnly.value) {
-                                items.setAll(todos.filter { todo -> todo.display })
-                            } else {
-                                items.setAll(todos)
-                            }
+                fun updateItems(source: SignalSource, todos: List<ToDo>) {
+                    if (signalSource == SignalSource.REMINDER_LIST_VIEW) {
+                        for (todo in todos) {
+                            println(todo)
                         }
+                    }
+                    if (source == signalSource) {
+                        val ts =
+                            if (todayOnly.value) {
+                                todos.filter { todo ->
+                                    todo.display
+                                }
+                            } else {
+                                todos
+                            }.filter { todo ->
+                                todo.displayArea == displayArea
+                            }
+                        items.setAll(ts)
+                    }
+                }
+                controller.refreshResponse.subscribeBy(
+                    onNext = { (source, todos) ->
+                        updateItems(source = source, todos = todos)
                     },
                     onError = ::alertError
                 )
-                scope.toDoController.filterResponse.subscribeBy(
+                controller.filterResponse.subscribeBy(
                     onNext = { (source, todos) ->
-                        if (source == SignalSource.TODO_LIST_VIEW) {
-                            if (todayOnly.value) {
-                                items.setAll(todos.filter { todo -> todo.display })
-                            } else {
-                                items.setAll(todos)
-                            }
-                        }
+                        updateItems(source = source, todos = todos)
                     },
                     onError = ::alertError
                 )
-                scope.toDoController.deleteResponse.subscribeBy(
+                controller.deleteResponse.subscribeBy(
                     onNext = { id -> items.removeIf { it.id == id } },
                     onError = ::alertError
                 )
-                scope.toDoController.updateResponse.subscribeBy(
+                controller.updateResponse.subscribeBy(
                     onNext = { todo ->
                         if (todayOnly.value) {
                             if (todo.display) {
@@ -158,7 +176,7 @@ class ToDoListView : View("ToDos") {
                     },
                     onError = ::alertError
                 )
-                scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW)
+                controller.refreshRequest.onNext(signalSource)
             }
         }
 
@@ -171,8 +189,15 @@ class ToDoListView : View("ToDos") {
                     tooltip("Add ToDo (CTRL + A)")
                     shortcut("Ctrl+A")
                     action {
-                        ToDoEditor(scope = scope, mode = "App", todo = ToDo.default()).openModal(
-                            primaryStage.style, Modality.WINDOW_MODAL)
+                        ToDoEditor(
+                            controller = controller,
+                            mode = "App",
+                            todo = ToDo.default(),
+                            displayArea = displayArea
+                        ).openModal(
+                            primaryStage.style,
+                            Modality.WINDOW_MODAL
+                        )
                     }
                 }
                 deleteButton = button {
@@ -183,25 +208,36 @@ class ToDoListView : View("ToDos") {
                     shortcut("Ctrl+X")
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
-                            scope.toDoController.deleteRequest.onNext(todo.id)
+                            controller.deleteRequest.onNext(todo.id)
                         }
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
                 }
                 refreshButton = button {
-                    graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply { glyphSize = 14.0 }
+                    graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply {
+                        glyphSize = 14.0
+                    }
                     tooltip("Refresh ToDos (CTRL + R)")
                     shortcut("Ctrl+R")
-                    action { scope.toDoController.refreshRequest.onNext(SignalSource.TODO_LIST_VIEW) }
+                    action { controller.refreshRequest.onNext(signalSource) }
                 }
                 editButton = button {
-                    graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply { glyphSize = 14.0 }
+                    graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply {
+                        glyphSize = 14.0
+                    }
                     tooltip("Edit ToDo (CTRL + E")
                     shortcut("CTRL + E")
                     action {
                         table.selectionModel.selectedItem?.let {
-                            ToDoEditor(scope = scope, mode = "Edit", todo = it).openModal(
-                                primaryStage.style, Modality.WINDOW_MODAL)
+                            ToDoEditor(
+                                controller = controller,
+                                mode = "Edit",
+                                todo = it,
+                                displayArea = displayArea
+                            ).openModal(
+                                primaryStage.style,
+                                Modality.WINDOW_MODAL
+                            )
                         }
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)

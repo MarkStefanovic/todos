@@ -7,7 +7,7 @@ import javafx.scene.control.DatePicker
 import javafx.scene.control.TextArea
 import javafx.scene.control.TextField
 import org.controlsfx.control.PrefixSelectionComboBox
-import src.app.AppScope
+import src.controller.BaseController
 import src.model.ToDo
 import src.model.getWeekdayByName
 import tornadofx.*
@@ -17,7 +17,12 @@ import java.time.LocalDate
 val FREQUENCIES = listOf("Once", "Daily", "Weekly", "Monthly", "Yearly", "XDays")
 val WEEKDAY_NAMES = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
-class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo) : Fragment() {
+class ToDoEditor(
+    val controller : BaseController<ToDo>,
+    val mode : String,
+    val todo : ToDo,
+    displayArea : String
+) : Fragment() {
     var advanceNoticeField: PrefixSelectionComboBox<Int> by singleAssign()
     var descriptionField: TextField by singleAssign()
     var expireDaysField: PrefixSelectionComboBox<Int> by singleAssign()
@@ -34,7 +39,8 @@ class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo)
     private val validationContext = ValidationContext()
 
     init {
-        title = if (mode == "Edit") "Edit ToDo" else "Add New ToDo"
+        val titleBase = if (mode == "Edit") "Edit" else "Add New"
+        title = "$titleBase $displayArea"
     }
 
     override val root = vbox {
@@ -135,70 +141,52 @@ class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo)
                 graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply { glyphSize = 18.0 }
                 isDefaultButton = true
                 action {
+                    val baseNewToDo = ToDo.default().copy(
+                        id = todo.id,
+                        description = descriptionField.text,
+                        frequency = frequencyField.value,
+                        displayArea = displayArea,
+                        note = noteField.text
+                    )
                     val newToDo = when (frequencyField.value) {
-                        "Once" -> ToDo.default().copy(
-                            id = todo.id,
-                            description = descriptionField.text,
-                            frequency = frequencyField.value,
+                        "Once" -> baseNewToDo.copy(
                             advanceNotice = advanceNoticeField.value,
                             expireDays = expireDaysField.value,
                             month = onceField.value.monthValue,
                             monthday = onceField.value.dayOfMonth,
-                            year = onceField.value.year,
-                            note = noteField.text
+                            year = onceField.value.year
                         )
-                        "Daily" -> ToDo.default().copy(
-                            id = todo.id,
-                            description = descriptionField.text,
-                            frequency = frequencyField.value,
+                        "Daily" -> baseNewToDo.copy(
                             advanceNotice = 0,
-                            expireDays = 1,
-                            note = noteField.text
+                            expireDays = 1
                         )
-                        "Weekly" -> ToDo.default().copy(
-                            id = todo.id,
-                            description = descriptionField.text,
-                            frequency = frequencyField.value,
+                        "Weekly" -> baseNewToDo.copy(
                             advanceNotice = advanceNoticeField.value,
                             expireDays = expireDaysField.value,
-                            weekday = getWeekdayByName(weekdayField.value),
-                            note = noteField.text
+                            weekday = getWeekdayByName(weekdayField.value)
                         )
-                        "Monthly" -> ToDo.default().copy(
-                            id = todo.id,
-                            description = descriptionField.text,
-                            frequency = frequencyField.value,
+                        "Monthly" -> baseNewToDo.copy(
                             advanceNotice = advanceNoticeField.value,
                             expireDays = expireDaysField.value,
-                            monthday = monthdayField.value,
-                            note = noteField.text
+                            monthday = monthdayField.value
                         )
-                        "Yearly" -> ToDo.default().copy(
-                            id = todo.id,
-                            description = descriptionField.text,
-                            frequency = frequencyField.value,
+                        "Yearly" -> baseNewToDo.copy(
                             advanceNotice = advanceNoticeField.value,
                             expireDays = expireDaysField.value,
                             month = monthField.value,
-                            monthday = monthdayField.value,
-                            note = noteField.text
+                            monthday = monthdayField.value
                         )
-                        "XDays" -> ToDo.default().copy(
-                            id = todo.id,
-                            description = descriptionField.text,
-                            frequency = frequencyField.value,
+                        "XDays" -> baseNewToDo.copy(
                             advanceNotice = advanceNoticeField.value,
                             expireDays = expireDaysField.value,
-                            startDate = startDateField.value,
-                            days = daysField.value,
-                            note = noteField.text
+                            startDate = startDateField.value
                         )
                         else -> throw NotImplementedError()
                     }
                     if (mode == "Edit") {
-                        scope.toDoController.updateRequest.onNext(newToDo)
+                        controller.updateRequest.onNext(newToDo)
                     } else {
-                        scope.toDoController.addRequest.onNext(newToDo)
+                        controller.addRequest.onNext(newToDo)
                     }
                 }
                 enableWhen(validationContext.valid)
@@ -207,8 +195,8 @@ class ToDoEditor(override val scope: AppScope, val mode: String, val todo: ToDo)
 
         setAvailableFields(frequencyField.value)
 
-        scope.toDoController.addResponse.subscribe { close() }
-        scope.toDoController.updateResponse.subscribe { close() }
+        controller.addResponse.subscribe { close() }
+        controller.updateResponse.subscribe { close() }
     }
 
     private fun setAvailableFields(frequency: String?) {

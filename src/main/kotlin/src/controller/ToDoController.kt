@@ -30,6 +30,7 @@ class ToDoController(
                 it[expireDays] = newItem.expireDays
                 it[advanceNotice] = newItem.advanceNotice
                 it[note] = newItem.note
+                it[displayArea] = newItem.displayArea
             } get ToDos.id
         }?.let { id ->
             byId(id)?.let {
@@ -77,6 +78,7 @@ class ToDoController(
                     it[expireDays] = item.expireDays
                     it[advanceNotice] = item.advanceNotice
                     it[note] = item.note
+                    it[displayArea] = item.displayArea
                 }
             }
             byId(item.id)?.let { updated ->
