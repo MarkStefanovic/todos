@@ -18,10 +18,10 @@ val FREQUENCIES = listOf("Once", "Daily", "Weekly", "Monthly", "Yearly", "XDays"
 val WEEKDAY_NAMES = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 class ToDoEditor(
-    val controller : BaseController<ToDo>,
-    val mode : String,
-    val todo : ToDo,
-    displayArea : String
+    val controller: BaseController<ToDo>,
+    val mode: String,
+    val todo: ToDo,
+    displayArea: String
 ) : Fragment() {
     var advanceNoticeField: PrefixSelectionComboBox<Int> by singleAssign()
     var descriptionField: TextField by singleAssign()
@@ -179,7 +179,8 @@ class ToDoEditor(
                         "XDays" -> baseNewToDo.copy(
                             advanceNotice = advanceNoticeField.value,
                             expireDays = expireDaysField.value,
-                            startDate = startDateField.value
+                            startDate = startDateField.value,
+                            days = daysField.value
                         )
                         else -> throw NotImplementedError()
                     }
