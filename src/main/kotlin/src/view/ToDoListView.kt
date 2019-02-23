@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.*
+import javafx.scene.input.KeyCombination
 import javafx.stage.Modality
 import mu.KLogging
 import org.jetbrains.exposed.sql.lowerCase
@@ -29,7 +30,7 @@ class ToDoListView(
 
     companion object: KLogging()
 
-    val signalSource =
+    private val signalSource =
         if (displayArea == "ToDos") {
             SignalSource.TODO_LIST_VIEW
         } else {
@@ -186,8 +187,7 @@ class ToDoListView(
                     graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Add ToDo (CTRL + A)")
-                    shortcut("Ctrl+A")
+                    tooltip("Add item")
                     action {
                         ToDoEditor(
                             controller = controller,
@@ -204,8 +204,7 @@ class ToDoListView(
                     graphic = FontAwesomeIconView(FontAwesomeIcon.TRASH_ALT).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Delete selected ToDo (CTRL + X)")
-                    shortcut("Ctrl+X")
+                    tooltip("Delete selected item")
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
                             controller.deleteRequest.onNext(todo.id)
@@ -217,16 +216,14 @@ class ToDoListView(
                     graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Refresh ToDos (CTRL + R)")
-                    shortcut("Ctrl+R")
+                    tooltip("Refresh table")
                     action { controller.refreshRequest.onNext(signalSource) }
                 }
                 editButton = button {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Edit ToDo (CTRL + E")
-                    shortcut("CTRL + E")
+                    tooltip("Edit item")
                     action {
                         table.selectionModel.selectedItem?.let {
                             ToDoEditor(
