@@ -199,6 +199,10 @@ val birthdays: Set<ToDo> = setOf(
         expireDays = 7, displayArea = "Reminders"
     ),
     ToDo.default().copy(
+        description = "Mom's Birthday", frequency = "Yearly", month = 8, monthday = 14, advanceNotice = 30,
+        expireDays = 7, displayArea = "Reminders"
+    ),
+    ToDo.default().copy(
         description = "Dad's Birthday", frequency = "Yearly", month = 11, monthday = 20, advanceNotice = 30,
         expireDays = 7, displayArea = "Reminders"
     ),
