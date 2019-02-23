@@ -39,7 +39,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
     // ui
-    compile "no.tornado:tornadofx:1.7.17"
+    compile "no.tornado:tornadofx:1.7.18"
     compile "de.jensd:fontawesomefx:8.9"
     compile "no.tornado:tornadofx-controlsfx:0.1"
 
