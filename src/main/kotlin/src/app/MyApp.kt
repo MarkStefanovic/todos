@@ -17,7 +17,7 @@ import tornadofx.*
 val logger = KotlinLogging.logger { }
 
 
-class MyApp: App(MainView::class, Styles::class) {
+class MyApp : App(MainView::class, Styles::class) {
     private val db = Db(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val scheduler = SchedulerProvider()
     private val toDoController = ToDoController(
@@ -28,6 +28,7 @@ class MyApp: App(MainView::class, Styles::class) {
         db = db,
         schedulerProvider = scheduler
     )
+
     init {
         logger.debug("Starting App")
 
