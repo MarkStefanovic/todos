@@ -3,6 +3,7 @@ package src.view
 import javafx.scene.text.Font.font
 import javafx.scene.text.FontWeight
 import src.app.AppScope
+import src.controller.Token
 import tornadofx.*
 
 class MainView: View("ToDo List") {
@@ -21,7 +22,9 @@ class MainView: View("ToDo List") {
                     add(
                         ToDoListView(
                             controller = scope.toDoController,
-                            displayArea = "ToDos"
+                            token = Token.TODO_LIST_VIEW,
+                            alertService = scope.alertService,
+                            confirmationService = scope.confirmationService
                         )
                     )
                 }
@@ -39,11 +42,18 @@ class MainView: View("ToDo List") {
                     add(
                         ToDoListView(
                             controller = scope.reminderController,
-                            displayArea = "Reminders"
+                            token = Token.REMINDER_LIST_VIEW,
+                            alertService = scope.alertService,
+                            confirmationService = scope.confirmationService
                         )
                     )
                 }
             }
         }
+    }
+
+    init {
+        scope.toDoController.refreshRequest.onNext(Token.TODO_LIST_VIEW)
+        scope.reminderController.refreshRequest.onNext(Token.REMINDER_LIST_VIEW)
     }
 }

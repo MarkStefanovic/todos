@@ -6,24 +6,28 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 
 sealed class Frequency {
-    abstract fun nextDate(expireDays: Int = 0, referenceDate: LocalDate = LocalDate.now()): LocalDate
+    abstract fun nextDate(
+        advanceDays: Int = 0,
+        expireDays: Int = 0,
+        referenceDate: LocalDate = LocalDate.now()
+    ): LocalDate
 }
 
 object Never : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate) : LocalDate =
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate =
         LocalDate.of(9999, 12, 31)
 
     override fun toString() = "never"
 }
 
 object Daily : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate) : LocalDate = referenceDate
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate = referenceDate
 
     override fun toString() = "daily"
 }
 
 data class Once(val year: Int, val month: Int, val monthday: Int) : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate) =
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate) =
         LocalDate.of(year, month, monthday)
 
     override fun toString(): String {
@@ -33,14 +37,14 @@ data class Once(val year: Int, val month: Int, val monthday: Int) : Frequency() 
 }
 
 data class Weekly(val weekday: DayOfWeek) : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate) : LocalDate =
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate =
         referenceDate.with(TemporalAdjusters.nextOrSame(weekday))
 
     override fun toString() = "every $weekday"
 }
 
 data class Monthly(val monthday: Int) : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate): LocalDate =
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate =
         referenceDate.nextMonthDay(
             dayOfMonth = monthday,
             expireDays = expireDays
@@ -50,7 +54,7 @@ data class Monthly(val monthday: Int) : Frequency() {
 }
 
 data class Yearly(val monthValue: Int, val dayOfMonth: Int) : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate): LocalDate =
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate =
         referenceDate.nextYearDay(
             monthValue = monthValue,
             dayOfMonth = dayOfMonth,
@@ -61,13 +65,14 @@ data class Yearly(val monthValue: Int, val dayOfMonth: Int) : Frequency() {
 }
 
 data class XDays(val startDate: LocalDate, val days: Int) : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate): LocalDate {
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate {
         val daysFromStart = ChronoUnit.DAYS.between(startDate, referenceDate)
         val modDays = daysFromStart.rem(days)
         val prior = referenceDate.minusDays(modDays)
         val next = referenceDate.plusDays(days - modDays)
         return when {
             referenceDate == startDate -> startDate
+            next.minusDays(advanceDays.toLong()) > referenceDate -> prior
             prior.plusDays(expireDays.toLong()) > referenceDate -> next
             else -> prior
         }
@@ -75,7 +80,7 @@ data class XDays(val startDate: LocalDate, val days: Int) : Frequency() {
 }
 
 data class Irregular(val monthValue: Int, val weekNumber: Int, val weekday: DayOfWeek) : Frequency() {
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate): LocalDate =
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate =
         referenceDate.nextXWeekdayOfMonth(
             month = monthValue,
             week = weekNumber,
@@ -105,7 +110,7 @@ object Easter: Frequency() {
         return LocalDate.of(year, month, day)
     }
 
-    override fun nextDate(expireDays: Int, referenceDate: LocalDate): LocalDate {
+    override fun nextDate(advanceDays: Int, expireDays: Int, referenceDate: LocalDate): LocalDate {
         val easterCurrentYear = calculateEaster(referenceDate.year)
         val easterNextYear = calculateEaster(referenceDate.year + 1)
         return if (referenceDate <= easterCurrentYear.plusDays(expireDays.toLong()))

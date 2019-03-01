@@ -6,16 +6,17 @@ import io.reactivex.rxkotlin.subscribeBy
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
-import javafx.scene.control.*
-import javafx.scene.input.KeyCombination
+import javafx.scene.control.Button
+import javafx.scene.control.CheckBox
+import javafx.scene.control.TableView
+import javafx.scene.control.TextField
 import javafx.stage.Modality
 import mu.KLogging
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.select
 import src.app.Styles.Companion.centerAlignedCell
-import src.app.alertError
 import src.controller.BaseController
-import src.controller.SignalSource
+import src.controller.Token
 import src.model.ToDo
 import src.model.ToDo.Companion.NONE_DATE
 import src.model.ToDos
@@ -24,17 +25,21 @@ import java.time.LocalDate
 
 
 class ToDoListView(
-    val controller : BaseController<ToDo>,
-    val displayArea : String
+    val controller: BaseController<ToDo>,
+    val token: Token,
+    val alertService: AlertService,
+    val confirmationService: ConfirmationService
 ) : View() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
-    private val signalSource =
-        if (displayArea == "ToDos") {
-            SignalSource.TODO_LIST_VIEW
-        } else {
-            SignalSource.REMINDER_LIST_VIEW
+    private val displayArea =
+        when (token) {
+            Token.REMINDER_LIST_VIEW -> "Reminders"
+            Token.TODO_LIST_VIEW -> "ToDos"
+            else -> throw Exception(
+                "Only a REMINDER_LIST_VIEW or TODO_LIST_VIEW token is accepted by the ToDoList view."
+            )
         }
 
     // Control handles for testing
@@ -45,22 +50,21 @@ class ToDoListView(
     var editButton: Button by singleAssign()
     var filterText: TextField by singleAssign()
     var todayCheckbox: CheckBox by singleAssign()
-    var deleteConfirmation: Alert? = null
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            controller.refreshRequest.onNext(signalSource)
+            controller.refreshRequest.onNext(token)
         }
     }
 
     private val filter = SimpleStringProperty().apply {
         onChange { description ->
             if (description.isNullOrBlank())
-                controller.refreshRequest.onNext(signalSource)
+                controller.refreshRequest.onNext(token)
             else
                 controller.filterRequest.onNext(
-                    signalSource to ToDos.select {
-                        ToDos.description.lowerCase() like "%${ description.toLowerCase() }%"
+                    token to ToDos.select {
+                        ToDos.description.lowerCase() like "%${description.toLowerCase()}%"
                     }
                 )
         }
@@ -75,7 +79,7 @@ class ToDoListView(
         paddingAll = 4
 
         center {
-            table = tableview<ToDo> {
+            table = tableview {
                 readonlyColumn("Description", ToDo::description) {
                     prefWidth = 300.0
                 }
@@ -125,15 +129,10 @@ class ToDoListView(
                             items.add(it)
                         }
                     },
-                    onError = ::alertError
+                    onError = alertService::alertError
                 )
-                fun updateItems(source: SignalSource, todos: List<ToDo>) {
-                    if (signalSource == SignalSource.REMINDER_LIST_VIEW) {
-                        for (todo in todos) {
-                            println(todo)
-                        }
-                    }
-                    if (source == signalSource) {
+                fun updateItems(source: Token, todos: List<ToDo>) {
+                    if (source == token) {
                         val ts =
                             if (todayOnly.value) {
                                 todos.filter { todo ->
@@ -151,17 +150,17 @@ class ToDoListView(
                     onNext = { (source, todos) ->
                         updateItems(source = source, todos = todos)
                     },
-                    onError = ::alertError
+                    onError = alertService::alertError
                 )
                 controller.filterResponse.subscribeBy(
                     onNext = { (source, todos) ->
                         updateItems(source = source, todos = todos)
                     },
-                    onError = ::alertError
+                    onError = alertService::alertError
                 )
                 controller.deleteResponse.subscribeBy(
                     onNext = { id -> items.removeIf { it.id == id } },
-                    onError = ::alertError
+                    onError = alertService::alertError
                 )
                 controller.updateResponse.subscribeBy(
                     onNext = { todo ->
@@ -175,9 +174,8 @@ class ToDoListView(
                             items[items.indexOfFirst { it.id == todo.id }] = todo
                         }
                     },
-                    onError = ::alertError
+                    onError = alertService::alertError
                 )
-                controller.refreshRequest.onNext(signalSource)
             }
         }
 
@@ -217,7 +215,7 @@ class ToDoListView(
                         glyphSize = 14.0
                     }
                     tooltip("Refresh table")
-                    action { controller.refreshRequest.onNext(signalSource) }
+                    action { controller.refreshRequest.onNext(token) }
                 }
                 editButton = button {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply {

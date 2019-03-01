@@ -4,22 +4,26 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.subjects.PublishSubject
 import mu.KLogging
 import org.jetbrains.exposed.sql.Query
+import src.view.AlertService
 import tornadofx.*
 import java.util.concurrent.TimeUnit
 
 
-enum class SignalSource {
+enum class Token {
     REMINDER_EDITOR,
     REMINDER_LIST_VIEW,
     TODO_EDITOR,
     TODO_LIST_VIEW,
 }
 
-abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) : Controller() {
+abstract class BaseController<T : Any>(
+    alertService: AlertService,
+    schedulerProvider: BaseSchedulerProvider
+) : Controller() {
     companion object : KLogging()
 
-    val refreshRequest = PublishSubject.create<SignalSource>()
-    val refreshResponse = PublishSubject.create<Pair<SignalSource, List<T>>>().apply {
+    val refreshRequest = PublishSubject.create<Token>()
+    val refreshResponse = PublishSubject.create<Pair<Token, List<T>>>().apply {
         observeOn(schedulerProvider.ui())
     }
     val addRequest = PublishSubject.create<T>()
@@ -34,31 +38,31 @@ abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) 
     val updateResponse = PublishSubject.create<T>().apply {
         observeOn(schedulerProvider.ui())
     }
-    val filterRequest = PublishSubject.create<Pair<SignalSource, Query>>()
-    val filterResponse = PublishSubject.create<Pair<SignalSource, List<T>>>().apply {
+    val filterRequest = PublishSubject.create<Pair<Token, Query>>()
+    val filterResponse = PublishSubject.create<Pair<Token, List<T>>>().apply {
         observeOn(schedulerProvider.ui())
     }
 
     init {
-        addRequest.subscribeOn(schedulerProvider.io()).subscribeBy (
+        addRequest.subscribeOn(schedulerProvider.io()).subscribeBy(
             onNext = ::add,
-            onError = { it.printStackTrace() }
+            onError = alertService::alertError
         )
-        deleteRequest.subscribeOn(schedulerProvider.io()).subscribeBy (
+        deleteRequest.subscribeOn(schedulerProvider.io()).subscribeBy(
             onNext = ::delete,
-            onError = { logger.error(it.message) }
+            onError = alertService::alertError
         )
-        refreshRequest.subscribeOn(schedulerProvider.io()).debounce(200, TimeUnit.MILLISECONDS).subscribeBy (
+        refreshRequest.subscribeOn(schedulerProvider.io()).debounce(200, TimeUnit.MILLISECONDS).subscribeBy(
             onNext = ::refresh,
-            onError = { logger.error(it.message) }
+            onError = alertService::alertError
         )
-        updateRequest.subscribeOn(schedulerProvider.io()).subscribeBy (
+        updateRequest.subscribeOn(schedulerProvider.io()).subscribeBy(
             onNext = ::update,
-            onError = { logger.error(it.message) }
+            onError = alertService::alertError
         )
-        filterRequest.subscribeOn(schedulerProvider.io()).debounce(200, TimeUnit.MILLISECONDS).subscribeBy (
+        filterRequest.subscribeOn(schedulerProvider.io()).debounce(200, TimeUnit.MILLISECONDS).subscribeBy(
             onNext = ::filter,
-            onError = { logger.error(it.message) }
+            onError = alertService::alertError
         )
     }
 
@@ -68,7 +72,7 @@ abstract class BaseController<T: Any>(schedulerProvider: BaseSchedulerProvider) 
 
     abstract fun update(item: T)
 
-    abstract fun refresh(source: SignalSource)
+    abstract fun refresh(token: Token)
 
-    abstract fun filter(request: Pair<SignalSource, Query>)
+    abstract fun filter(request: Pair<Token, Query>)
 }

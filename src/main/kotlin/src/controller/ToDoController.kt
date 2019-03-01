@@ -1,20 +1,24 @@
 package src.controller
 
-import javafx.scene.control.Alert
-import javafx.scene.control.ButtonType
 import org.jetbrains.exposed.sql.*
 import src.app.Db
 import src.app.toJodaDateTime
 import src.model.ToDo
 import src.model.ToDos
 import src.model.toToDo
+import src.view.AlertService
+import src.view.ConfirmationService
 
 
 class ToDoController(
     val db: Db,
+    val confirmationService: ConfirmationService,
+    alertService: AlertService,
     schedulerProvider: BaseSchedulerProvider
-) : BaseController<ToDo>(schedulerProvider) {
-
+) : BaseController<ToDo>(
+    schedulerProvider = schedulerProvider,
+    alertService = alertService
+) {
     override fun add(newItem: ToDo) {
         db.execute {
             ToDos.insert {
@@ -41,19 +45,11 @@ class ToDoController(
 
     override fun delete(id: Int) {
         byId(id)?.let { todo ->
-            Alert(
-                Alert.AlertType.WARNING,
-                "Are you sure you want to delete '${todo.description}'?",
-                ButtonType.YES,
-                ButtonType.NO
-            ).apply {
-                showAndWait()
-                if (result == ButtonType.YES) {
-                    db.execute {
-                        ToDos.deleteWhere { ToDos.id eq id }
-                    }
-                    deleteResponse.onNext(id)
+            if (confirmationService.confirm("Are you sure you want to delete '${todo.description}'?")) {
+                db.execute {
+                    ToDos.deleteWhere { ToDos.id eq id }
                 }
+                deleteResponse.onNext(id)
             }
         }
     }
@@ -87,17 +83,17 @@ class ToDoController(
         }
     }
 
-    override fun refresh(source: SignalSource) {
+    override fun refresh(token: Token) {
         db.execute {
             ToDos.selectAll()
                 .map { it.toToDo() }
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
         }?.let { todos ->
-            refreshResponse.onNext(source to todos)
+            refreshResponse.onNext(token to todos)
         }
     }
 
-    override fun filter(request: Pair<SignalSource, Query>) {
+    override fun filter(request: Pair<Token, Query>) {
         val (token, query) = request
         db.execute {
             query

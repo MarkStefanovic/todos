@@ -85,7 +85,7 @@ data class ToDo(
     val display: Boolean
         get() = displayToDo(
             nextDate = nextDate,
-            advanceNotice = advanceNotice,
+            advanceDays = advanceNotice,
             expireDays = expireDays,
             lastCompleted = dateCompleted,
             referenceDate = LocalDate.now()
@@ -93,6 +93,7 @@ data class ToDo(
 
     val nextDate: LocalDate
         get() = frequencyType.nextDate(
+            advanceDays = advanceNotice,
             expireDays = expireDays,
             referenceDate = (
                 if (dateCompleted >= LocalDate.now()) dateCompleted
@@ -223,15 +224,19 @@ val birthdays: Set<ToDo> = setOf(
 /** Should the item be displayed on today's to-do list?*/
 fun displayToDo(
     nextDate: LocalDate,
-    advanceNotice: Int,
+    advanceDays: Int,
     expireDays: Int,
     lastCompleted: LocalDate = LocalDate.of(1970, 1, 1),
     referenceDate: LocalDate = LocalDate.now()
-): Boolean =
-    when {
-        (lastCompleted >= nextDate.minusDays(advanceNotice.toLong())) and
-            (lastCompleted <= nextDate.plusDays(expireDays.toLong())) -> false
-        (referenceDate >= nextDate.minusDays(advanceNotice.toLong())) and
-            (referenceDate <= nextDate.plusDays(expireDays.toLong())) -> true
+): Boolean {
+    val advanceStart = nextDate.minusDays(advanceDays.toLong())
+    val expireEnd = nextDate.plusDays(expireDays.toLong())
+    val lastCompletedInCurrentWindow = (lastCompleted > advanceStart) and (lastCompleted < expireEnd)
+    val referenceDateInCurrentWindow = (referenceDate >= advanceStart) and (referenceDate <= expireEnd)
+    return when {
+        lastCompletedInCurrentWindow -> false
+        referenceDateInCurrentWindow -> true
+        referenceDate == nextDate -> true  // TODO don't allow 0 expireDays in input, and remove this
         else -> false
     }
+}

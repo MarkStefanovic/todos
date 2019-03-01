@@ -12,21 +12,29 @@ import src.model.ToDos
 import src.model.birthdays
 import src.model.holidays
 import src.view.MainView
+import src.view.TornadoAlertService
+import src.view.TornadoConfirmationService
 import tornadofx.*
 
 val logger = KotlinLogging.logger { }
 
 
 class MyApp : App(MainView::class, Styles::class) {
+    private val alertService = TornadoAlertService()
+    private val confirmationService = TornadoConfirmationService()
     private val db = Db(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val scheduler = SchedulerProvider()
     private val toDoController = ToDoController(
         db = db,
-        schedulerProvider = scheduler
+        schedulerProvider = scheduler,
+        alertService = alertService,
+        confirmationService = confirmationService
     )
     private val reminderController = ToDoController(
         db = db,
-        schedulerProvider = scheduler
+        schedulerProvider = scheduler,
+        alertService = alertService,
+        confirmationService = confirmationService
     )
 
     init {
@@ -34,7 +42,9 @@ class MyApp : App(MainView::class, Styles::class) {
 
         scope = AppScope(
             toDoController = toDoController,
-            reminderController = reminderController
+            reminderController = reminderController,
+            alertService = alertService,
+            confirmationService = confirmationService
         )
 
         // insert initial sql rows if creating new db

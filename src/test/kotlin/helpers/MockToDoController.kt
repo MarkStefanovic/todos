@@ -2,7 +2,7 @@ package helpers
 
 import org.jetbrains.exposed.sql.Query
 import src.controller.BaseController
-import src.controller.SignalSource
+import src.controller.Token
 import src.model.ToDo
 
 
@@ -40,11 +40,11 @@ class MockToDoController: BaseController<ToDo>(TrampolineSchedulerProvider()) {
         updateResponse.onNext(item)
     }
 
-    override fun refresh(source: SignalSource) {
-        refreshResponse.onNext(source to todos)
+    override fun refresh(token: Token) {
+        refreshResponse.onNext(token to todos)
     }
 
-    override fun filter(request: Pair<SignalSource, Query>) {
+    override fun filter(request: Pair<Token, Query>) {
         val (source, query) = request
         currentQuery = query
         filterResponse.onNext(source to todos)
