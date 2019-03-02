@@ -241,7 +241,7 @@ fun displayToDo(
 ): Boolean {
     val advanceStart = nextDate.minusDays(advanceDays.toLong())
     val expireEnd = nextDate.plusDays(expireDays.toLong())
-    val lastCompletedInCurrentWindow = (lastCompleted > advanceStart) and (lastCompleted < expireEnd)
+    val lastCompletedInCurrentWindow = (lastCompleted >= advanceStart) and (lastCompleted <= expireEnd)
     val referenceDateInCurrentWindow = (referenceDate >= advanceStart) and (referenceDate <= expireEnd)
     return when {
         lastCompletedInCurrentWindow -> false
