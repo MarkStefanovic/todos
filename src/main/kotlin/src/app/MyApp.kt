@@ -43,8 +43,7 @@ class MyApp : App(MainView::class, Styles::class) {
         scope = AppScope(
             toDoController = toDoController,
             reminderController = reminderController,
-            alertService = alertService,
-            confirmationService = confirmationService
+            alertService = alertService
         )
 
         // insert initial sql rows if creating new db
