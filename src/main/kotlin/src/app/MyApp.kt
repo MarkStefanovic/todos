@@ -63,7 +63,7 @@ class MyApp : App(MainView::class, Styles::class) {
                         it[weekNumber] = todo.weekNumber
                         it[expireDays] = todo.expireDays
                         it[advanceNotice] = todo.advanceNotice
-                        it[displayArea] = todo.displayArea
+                        it[displayArea] = todo.displayArea.name
                     }
                 }
             }

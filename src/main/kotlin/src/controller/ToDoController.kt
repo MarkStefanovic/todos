@@ -34,7 +34,7 @@ class ToDoController(
                 it[expireDays] = newItem.expireDays
                 it[advanceNotice] = newItem.advanceNotice
                 it[note] = newItem.note
-                it[displayArea] = newItem.displayArea
+                it[displayArea] = newItem.displayArea.name
             } get ToDos.id
         }?.let { id ->
             byId(id)?.let {
@@ -74,7 +74,7 @@ class ToDoController(
                     it[expireDays] = item.expireDays
                     it[advanceNotice] = item.advanceNotice
                     it[note] = item.note
-                    it[displayArea] = item.displayArea
+                    it[displayArea] = item.displayArea.name
                 }
             }
             byId(item.id)?.let { updated ->
@@ -87,6 +87,7 @@ class ToDoController(
         db.execute {
             ToDos.selectAll()
                 .map { it.toToDo() }
+                .filterNotNull()
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
         }?.let { todos ->
             refreshResponse.onNext(token to todos)
@@ -98,6 +99,7 @@ class ToDoController(
         db.execute {
             query
                 .map { it.toToDo() }
+                .filterNotNull()
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
         }?.let { todos ->
             filterResponse.onNext(token to todos)

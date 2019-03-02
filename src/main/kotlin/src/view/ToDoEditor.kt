@@ -8,6 +8,7 @@ import javafx.scene.control.TextArea
 import javafx.scene.control.TextField
 import org.controlsfx.control.PrefixSelectionComboBox
 import src.controller.BaseController
+import src.model.DisplayArea
 import src.model.ToDo
 import src.model.getWeekdayByName
 import tornadofx.*
@@ -145,7 +146,7 @@ class ToDoEditor(
                         id = todo.id,
                         description = descriptionField.text,
                         frequency = frequencyField.value,
-                        displayArea = displayArea,
+                        displayArea = DisplayArea.valueOf(displayArea),
                         note = noteField.text
                     )
                     val newToDo = when (frequencyField.value) {

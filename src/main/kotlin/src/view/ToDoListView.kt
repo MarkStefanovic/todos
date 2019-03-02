@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.select
 import src.app.Styles.Companion.centerAlignedCell
 import src.controller.BaseController
 import src.controller.Token
+import src.model.DisplayArea
 import src.model.ToDo
 import src.model.ToDo.Companion.NONE_DATE
 import src.model.ToDos
@@ -35,11 +36,9 @@ class ToDoListView(
 
     private val displayArea =
         when (token) {
-            Token.REMINDER_LIST_VIEW -> "Reminders"
-            Token.TODO_LIST_VIEW -> "ToDos"
-            else -> throw Exception(
-                "Only a REMINDER_LIST_VIEW or TODO_LIST_VIEW token is accepted by the ToDoList view."
-            )
+            Token.REMINDER_LIST_VIEW -> DisplayArea.Reminders
+            Token.TODO_LIST_VIEW -> DisplayArea.ToDos
+            else -> throw Exception("Invalid token, $token, passed to the the ToDoList view.")
         }
 
     // Control handles for testing
@@ -72,7 +71,7 @@ class ToDoListView(
     }
 
     init {
-        title = displayArea
+        title = displayArea.name
     }
 
     override val root = borderpane {
@@ -191,7 +190,7 @@ class ToDoListView(
                             controller = controller,
                             mode = "App",
                             todo = ToDo.default(),
-                            displayArea = displayArea
+                            displayArea = displayArea.name
                         ).openModal(
                             primaryStage.style,
                             Modality.WINDOW_MODAL
@@ -228,7 +227,7 @@ class ToDoListView(
                                 controller = controller,
                                 mode = "Edit",
                                 todo = it,
-                                displayArea = displayArea
+                                displayArea = displayArea.name
                             ).openModal(
                                 primaryStage.style,
                                 Modality.WINDOW_MODAL
