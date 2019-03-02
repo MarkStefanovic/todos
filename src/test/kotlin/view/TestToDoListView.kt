@@ -1,6 +1,8 @@
 package view
 
+import helpers.MockAlertService
 import helpers.MockToDoController
+import helpers.TrampolineSchedulerProvider
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import javafx.application.Platform
@@ -16,12 +18,16 @@ import tornadofx.*
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)  // junit-platform.properties does this for us
 class TestToDoListView {
     private val stage = FxToolkit.registerPrimaryStage()
-    private val testController = MockToDoController()
+    private val alertService = MockAlertService()
+    private val testController = MockToDoController(
+        alertService = alertService,
+        schedulerProvider = TrampolineSchedulerProvider()
+    )
     private val listView = ToDoListView(
         controller = testController,
-        token = Token.REMINDER_LIST_VIEW
+        token = Token.REMINDER_LIST_VIEW,
+        alertService = alertService
     )
-//    private val listView = find(ToDoListView::class, appScope)
 
     @Test
     fun `refresh should display initial rows`() {

@@ -2,25 +2,34 @@ package helpers
 
 import org.jetbrains.exposed.sql.Query
 import src.controller.BaseController
+import src.controller.BaseSchedulerProvider
 import src.controller.Token
+import src.model.DisplayArea
 import src.model.ToDo
+import src.view.AlertService
 
 
-class MockToDoController: BaseController<ToDo>(TrampolineSchedulerProvider()) {
+class MockToDoController(
+    alertService: AlertService,
+    schedulerProvider: BaseSchedulerProvider
+) : BaseController<ToDo>(
+    alertService = alertService,
+    schedulerProvider = schedulerProvider
+) {
     var currentQuery: Query? = null
 
     val todos = mutableListOf(
         ToDo.default().copy(
             id = 1, frequency = "Once", description = "Test1", year = 2010, month = 10, monthday = 1,
-            displayArea = "Reminders"
+            displayArea = DisplayArea.Reminders
         ),
         ToDo.default().copy(
             id = 2, frequency = "Once", description = "Test2", year = 2010, month = 10, monthday = 2,
-            displayArea = "Reminders"
+            displayArea = DisplayArea.Reminders
         ),
         ToDo.default().copy(
             id = 3, frequency = "Once", description = "Test3", year = 2010, month = 10, monthday = 3,
-            displayArea = "Reminders"
+            displayArea = DisplayArea.Reminders
         )
     )
 

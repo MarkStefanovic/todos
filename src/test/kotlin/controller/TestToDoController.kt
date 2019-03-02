@@ -1,5 +1,7 @@
 package controller
 
+import helpers.MockAlertService
+import helpers.MockConfirmationService
 import helpers.TrampolineSchedulerProvider
 import io.reactivex.observers.TestObserver
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -12,10 +14,7 @@ import org.junit.jupiter.api.function.Executable
 import src.app.Db
 import src.controller.ToDoController
 import src.controller.Token
-import src.model.ToDo
-import src.model.ToDos
-import src.model.holidays
-import src.model.toToDo
+import src.model.*
 import java.time.LocalDate
 
 
@@ -40,7 +39,7 @@ class TestToDoController {
                         it[weekNumber] = todo.weekNumber
                         it[expireDays] = todo.expireDays
                         it[advanceNotice] = todo.advanceNotice
-                        it[displayArea] = todo.displayArea
+                        it[displayArea] = todo.displayArea.name
                     }
                 }
             }
@@ -49,7 +48,9 @@ class TestToDoController {
 
     private val controller = ToDoController(
         db = db,
-        schedulerProvider = TrampolineSchedulerProvider()
+        schedulerProvider = TrampolineSchedulerProvider(),
+        confirmationService = MockConfirmationService(),
+        alertService = MockAlertService()
     )
 
     private fun byDescription(description: String) =
@@ -78,7 +79,7 @@ class TestToDoController {
         val testObserver = TestObserver<ToDo>()
         val todo = ToDo.default().copy(
             description = "Test", frequency = "Once", month = 10, monthday = 23, year = 2018,
-            displayArea = "Reminders"
+            displayArea = DisplayArea.Reminders
         )
         controller.addRequest.subscribe(testObserver)
         controller.addRequest.onNext(todo)

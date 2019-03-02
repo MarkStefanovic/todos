@@ -23,8 +23,7 @@ class MainView: View("ToDo List") {
                         ToDoListView(
                             controller = scope.toDoController,
                             token = Token.TODO_LIST_VIEW,
-                            alertService = scope.alertService,
-                            confirmationService = scope.confirmationService
+                            alertService = scope.alertService
                         )
                     )
                 }
@@ -43,8 +42,7 @@ class MainView: View("ToDo List") {
                         ToDoListView(
                             controller = scope.reminderController,
                             token = Token.REMINDER_LIST_VIEW,
-                            alertService = scope.alertService,
-                            confirmationService = scope.confirmationService
+                            alertService = scope.alertService
                         )
                     )
                 }

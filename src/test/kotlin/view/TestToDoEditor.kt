@@ -1,21 +1,25 @@
 package view
 
+import helpers.MockAlertService
 import helpers.MockToDoController
+import helpers.TrampolineSchedulerProvider
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import junit.framework.Assert.assertEquals
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
-import src.app.AppScope
+import src.model.DisplayArea
 import src.model.ToDo
 import src.view.ToDoEditor
 import java.time.LocalDate
 
 
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestToDoEditor {
     private val stage = FxToolkit.registerPrimaryStage()
-    private val testController = MockToDoController()
+    private val testController = MockToDoController(
+        alertService = MockAlertService(),
+        schedulerProvider = TrampolineSchedulerProvider()
+    )
     private val testObserver = TestObserver<ToDo>()
     private val today = LocalDate.now()
     private val yearlyToDo = ToDo.default().copy(
@@ -23,7 +27,7 @@ class TestToDoEditor {
         frequency = "Yearly",
         month = 10,
         monthday = 12,
-        displayArea = "Reminders"
+        displayArea = DisplayArea.Reminders
     )
 
     @Test

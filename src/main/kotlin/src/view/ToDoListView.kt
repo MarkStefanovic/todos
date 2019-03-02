@@ -28,8 +28,7 @@ import java.time.LocalDate
 class ToDoListView(
     val controller: BaseController<ToDo>,
     val token: Token,
-    val alertService: AlertService,
-    val confirmationService: ConfirmationService
+    val alertService: AlertService
 ) : View() {
 
     companion object : KLogging()
