@@ -47,8 +47,8 @@ gradle-app.setting
 \# gradle/wrapper/gradle-wrapper.properties
 
 app.db
+*.bat
 *.txt
 /gradle/
 /logs/
-gradlew.bat
 gradlew

@@ -6,44 +6,35 @@ import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
-import src.controller.SchedulerProvider
-import src.controller.ToDoController
-import src.model.ToDos
-import src.model.birthdays
-import src.model.holidays
-import src.view.MainView
-import src.view.TornadoAlertService
-import src.view.TornadoConfirmationService
+import src.domain.*
+import src.framework.EventBus
+import src.framework.EventModel
+import src.presentation.MainView
+import src.presentation.Styles
+import src.services.AsyncSchedulerProvider
+import src.services.Db
+import src.services.PopupAlertService
+import src.services.PopupConfirmationService
 import tornadofx.*
 
 val logger = KotlinLogging.logger { }
 
 
 class MyApp : App(MainView::class, Styles::class) {
-    private val alertService = TornadoAlertService()
-    private val confirmationService = TornadoConfirmationService()
+    private val alertService = PopupAlertService()
+    private val confirmationService = PopupConfirmationService()
     private val db = Db(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
-    private val scheduler = SchedulerProvider()
-    private val toDoController = ToDoController(
-        db = db,
-        schedulerProvider = scheduler,
-        alertService = alertService,
-        confirmationService = confirmationService
-    )
-    private val reminderController = ToDoController(
-        db = db,
-        schedulerProvider = scheduler,
-        alertService = alertService,
-        confirmationService = confirmationService
-    )
+    private val schedulerProvider = AsyncSchedulerProvider()
+    private val toDoEventModel = EventModel<ToDo>(schedulerProvider)
+    private val toDoRepository = ToDoRepository(db = db)
 
     init {
         logger.debug("Starting App")
 
         scope = AppScope(
-            toDoController = toDoController,
-            reminderController = reminderController,
-            alertService = alertService
+            alertService = alertService,
+            confirmationService = confirmationService,
+            toDoEventModel = toDoEventModel
         )
 
         // insert initial sql rows if creating new db
@@ -67,6 +58,14 @@ class MyApp : App(MainView::class, Styles::class) {
                 }
             }
         }
+
+        // start up the event bus
+        EventBus(
+            schedulerProvider = schedulerProvider,
+            alertService = alertService,
+            repository = toDoRepository,
+            eventModel = toDoEventModel
+        )
     }
 
     override fun start(stage: Stage) {

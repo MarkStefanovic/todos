@@ -1,13 +1,14 @@
 package src.app
 
-import src.controller.BaseController
-import src.model.ToDo
-import src.view.AlertService
+import src.domain.ToDo
+import src.framework.AlertService
+import src.framework.ConfirmationService
+import src.framework.EventModel
 import tornadofx.*
 
 
 class AppScope(
-    val toDoController : BaseController<ToDo>,
-    val reminderController: BaseController<ToDo>,
-    val alertService: AlertService
+    val toDoEventModel: EventModel<ToDo>,
+    val alertService: AlertService,
+    val confirmationService: ConfirmationService
 ) : Scope()
