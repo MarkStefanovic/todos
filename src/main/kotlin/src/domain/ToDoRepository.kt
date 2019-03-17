@@ -1,10 +1,10 @@
 package src.domain
 
 import org.jetbrains.exposed.sql.*
+import src.framework.DatabaseService
 import src.framework.Repository
-import src.services.Db
 
-class ToDoRepository(private val db: Db) : Repository<ToDo>() {
+class ToDoRepository(private val db: DatabaseService) : Repository<ToDo>() {
     override fun add(newItem: ToDo): ToDo? =
         db.execute {
             ToDos.insert {
@@ -26,16 +26,16 @@ class ToDoRepository(private val db: Db) : Repository<ToDo>() {
             byId(id)
         }
 
-    override fun delete(id: Int): Int? =
-        byId(id)?.let { todo ->
-            db.execute {
-                ToDos.deleteWhere { ToDos.id eq id }
-            }
+    override fun delete(item: ToDo): ToDo? {
+        db.execute {
+            ToDos.deleteWhere { ToDos.id eq item.id }
         }
+        return item
+    }
 
     override fun update(item: ToDo): ToDo? =
         if ((item.frequency == "Once") and item.complete) {
-            delete(item.id)
+            delete(item)
             null
         } else {
             db.execute {
@@ -68,13 +68,8 @@ class ToDoRepository(private val db: Db) : Repository<ToDo>() {
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
         }
 
-    override fun filter(query: Query): List<ToDo>? =
-        db.execute {
-            query
-                .map { it.toToDo() }
-                .filterNotNull()
-                .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
-        }
+    override fun filter(criteria: (ToDo) -> Boolean): List<ToDo>? =
+        all()?.filter(criteria)
 
     private fun byId(id: Int): ToDo? =
         db.execute {

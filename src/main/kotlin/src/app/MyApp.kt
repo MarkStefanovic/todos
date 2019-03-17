@@ -6,27 +6,37 @@ import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
-import src.domain.*
-import src.framework.EventBus
-import src.framework.EventModel
+import src.domain.ToDoRepository
+import src.domain.ToDos
+import src.domain.birthdays
+import src.domain.holidays
+import src.framework.RepositoryController
 import src.presentation.MainView
 import src.presentation.Styles
 import src.services.AsyncSchedulerProvider
-import src.services.Db
 import src.services.PopupAlertService
 import src.services.PopupConfirmationService
+import src.services.ProductionDb
 import tornadofx.*
 
 val logger = KotlinLogging.logger { }
 
 
+// In file
+//Database.connect("jdbc:sqlite:/data/data.db", "org.sqlite.JDBC")
+// In memory
+//Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC")
 class MyApp : App(MainView::class, Styles::class) {
     private val alertService = PopupAlertService()
     private val confirmationService = PopupConfirmationService()
-    private val db = Db(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
+    private val db = ProductionDb(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val schedulerProvider = AsyncSchedulerProvider()
-    private val toDoEventModel = EventModel<ToDo>(schedulerProvider)
     private val toDoRepository = ToDoRepository(db = db)
+    private val todoController = RepositoryController(
+        schedulerProvider = schedulerProvider,
+        alertService = alertService,
+        repository = toDoRepository
+    )
 
     init {
         logger.debug("Starting App")
@@ -34,7 +44,7 @@ class MyApp : App(MainView::class, Styles::class) {
         scope = AppScope(
             alertService = alertService,
             confirmationService = confirmationService,
-            toDoEventModel = toDoEventModel
+            todoController = todoController
         )
 
         // insert initial sql rows if creating new db
@@ -60,12 +70,7 @@ class MyApp : App(MainView::class, Styles::class) {
         }
 
         // start up the event bus
-        EventBus(
-            schedulerProvider = schedulerProvider,
-            alertService = alertService,
-            repository = toDoRepository,
-            eventModel = toDoEventModel
-        )
+
     }
 
     override fun start(stage: Stage) {

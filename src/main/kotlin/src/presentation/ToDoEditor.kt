@@ -11,7 +11,6 @@ import src.app.AppScope
 import src.domain.DisplayArea
 import src.domain.ToDo
 import src.domain.getWeekdayByName
-import src.framework.EventModel
 import tornadofx.*
 import java.time.LocalDate
 
@@ -23,14 +22,13 @@ enum class EditorMode {
     Add, Edit
 }
 
-class ToDoEditor(
-    val eventModel: EventModel<ToDo>,
-    val mode: EditorMode,
-    val todo: ToDo,
-    displayArea: DisplayArea
-) : Fragment() {
+class ToDoEditor : Fragment() {
 
     override val scope = super.scope as AppScope
+
+    private val mode: EditorMode by param()
+    private val todo: ToDo by param()
+    private val displayArea: DisplayArea by param()
 
     var advanceNoticeField: PrefixSelectionComboBox<Int> by singleAssign()
     var descriptionField: TextField by singleAssign()
@@ -194,9 +192,9 @@ class ToDoEditor(
                         else -> throw NotImplementedError()
                     }
                     if (mode == EditorMode.Edit) {
-                        eventModel.updateRequest.onNext(newToDo)
+                        scope.todoController.updateRequest.onNext(newToDo)
                     } else {
-                        eventModel.addRequest.onNext(newToDo)
+                        scope.todoController.addRequest.onNext(newToDo)
                     }
                 }
                 enableWhen(validationContext.valid)
@@ -205,8 +203,8 @@ class ToDoEditor(
 
         setAvailableFields(frequencyField.value)
 
-        eventModel.addResponse.subscribe { close() }
-        eventModel.updateResponse.subscribe { close() }
+        scope.todoController.addResponse.subscribe { close() }
+        scope.todoController.updateResponse.subscribe { close() }
     }
 
     private fun setAvailableFields(frequency: String?) {

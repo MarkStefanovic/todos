@@ -3,12 +3,12 @@ package src.app
 import src.domain.ToDo
 import src.framework.AlertService
 import src.framework.ConfirmationService
-import src.framework.EventModel
+import src.framework.RepositoryController
 import tornadofx.*
 
 
 class AppScope(
-    val toDoEventModel: EventModel<ToDo>,
+    val todoController: RepositoryController<ToDo>,
     val alertService: AlertService,
     val confirmationService: ConfirmationService
 ) : Scope()

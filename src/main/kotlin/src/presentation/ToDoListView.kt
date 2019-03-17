@@ -6,73 +6,71 @@ import io.reactivex.rxkotlin.subscribeBy
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
-import javafx.scene.control.Button
-import javafx.scene.control.CheckBox
 import javafx.scene.control.TableView
-import javafx.scene.control.TextField
 import javafx.stage.Modality
 import mu.KLogging
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.select
 import src.app.AppScope
+import src.app.Token
 import src.domain.DisplayArea
 import src.domain.ToDo
 import src.domain.ToDo.Companion.NONE_DATE
-import src.domain.ToDos
-import src.framework.AlertService
-import src.framework.ConfirmationService
-import src.framework.EventModel
-import src.framework.Token
+import src.framework.Identifier
 import src.presentation.Styles.Companion.centerAlignedCell
 import tornadofx.*
 import java.time.LocalDate
 
 
-class ToDoListView(
-    private val eventModel: EventModel<ToDo>,
-    private val token: Token,
-    private val alertService: AlertService,
-    private val confirmationService: ConfirmationService
-) : View() {
+class ToDoListView : Fragment() {
+//class ToDoListView(token: Identifier) : View() {
 
     override val scope = super.scope as AppScope
 
     companion object : KLogging()
 
+    private val token: Identifier by param()
+
+//    private val token = identifier as? Token ?: throw NotImplementedError("The token $token is not a valid token for the application.")
+
     private val displayArea =
         when (token) {
-            Token.ReminderListView -> DisplayArea.Reminders
-            Token.ToDoListView -> DisplayArea.ToDos
+            is Token.ReminderListView -> DisplayArea.Reminders
+            is Token.ToDoListView -> DisplayArea.ToDos
             else -> throw Exception("Invalid token, $token, passed to the the ToDoList view.")
         }
 
     // Control handles for testing
-    var table: TableView<ToDo> by singleAssign()
-    var addButton: Button by singleAssign()
-    var deleteButton: Button by singleAssign()
-    var refreshButton: Button by singleAssign()
-    var editButton: Button by singleAssign()
-    var filterText: TextField by singleAssign()
-    var todayCheckbox: CheckBox by singleAssign()
+    // TODO: find a better way of referencing the controls in the tests themselves
+    private var table: TableView<ToDo> by singleAssign()
+//    var table: TableView<ToDo> by singleAssign()
+//    var addButton: Button by singleAssign()
+//    var deleteButton: Button by singleAssign()
+//    var refreshButton: Button by singleAssign()
+//    var editButton: Button by singleAssign()
+//    var filterText: TextField by singleAssign()
+//    var todayCheckbox: CheckBox by singleAssign()
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            eventModel.refreshRequest.onNext(token)
+            scope.todoController.refreshRequest.onNext(token)
         }
     }
 
-    private val filter = SimpleStringProperty().apply {
+    private val filter = SimpleStringProperty("").apply {
         onChange { description ->
             if (description.isNullOrBlank())
-                eventModel.refreshRequest.onNext(token)
+                scope.todoController.refreshRequest.onNext(token)
             else
-                eventModel.filterRequest.onNext(
-                    token to ToDos.select {
-                        ToDos.description.lowerCase() like "%${description.toLowerCase()}%"
+                scope.todoController.filterRequest.onNext(
+                    token to { todo: ToDo ->
+                        description.toLowerCase() in todo.description.toLowerCase()
                     }
+//                    token to ToDos.select {
+//                        ToDos.description.lowerCase() like "%${description.toLowerCase()}%"
+//                    }
                 )
         }
-        eventModel.refreshResponse.subscribe { value = "" }
+        scope.todoController.refreshResponse.subscribe { value = "" }
+
     }
 
     init {
@@ -84,6 +82,7 @@ class ToDoListView(
 
         center {
             table = tableview {
+                id = "table"
                 readonlyColumn("Description", ToDo::description) {
                     prefWidth = 300.0
                 }
@@ -108,7 +107,7 @@ class ToDoListView(
                                         else
                                             LocalDate.now()
                                     val updatedToDo = todo.copy(dateCompleted = dateCompleted)
-                                    eventModel.updateRequest.onNext(updatedToDo)
+                                    scope.todoController.updateRequest.onNext(updatedToDo)
                                 }
                             }
                         }
@@ -125,7 +124,7 @@ class ToDoListView(
                     }
                 }
 
-                eventModel.addResponse.subscribeBy(
+                scope.todoController.addResponse.subscribeBy(
                     onNext = {
                         if (todayOnly.value) {
                             if (it.display) items.add(it)
@@ -133,40 +132,39 @@ class ToDoListView(
                             items.add(it)
                         }
                     },
-                    onError = alertService::alertError
+                    onError = scope.alertService::alertError
                 )
-                fun updateItems(source: Token, todos: List<ToDo>) {
-                    if (source == token) {
-                        val ts =
-                            if (todayOnly.value) {
-                                todos.filter { todo ->
-                                    todo.display
-                                }
-                            } else {
-                                todos
-                            }.filter { todo ->
-                                todo.displayArea == displayArea
-                            }
-                        items.setAll(ts)
+                fun updateItems(source: Identifier, todos: List<ToDo>) {
+                    val newToDos =
+                        if (todayOnly.value) {
+                            todos.filter { todo -> todo.display }
+                        } else {
+                            todos
+                        }.filter { todo -> todo.displayArea == displayArea }
+                    val prior = this@tableview.items.toSet()
+                    val new = newToDos.toSet()
+                    val changes = (new - prior) + (prior - new)
+                    if (changes.count() > 0) {
+                        items.setAll(newToDos)
                     }
                 }
-                eventModel.refreshResponse.subscribeBy(
+                scope.todoController.refreshResponse.subscribeBy(
                     onNext = { (source, todos) ->
                         updateItems(source = source, todos = todos)
                     },
-                    onError = alertService::alertError
+                    onError = scope.alertService::alertError
                 )
-                eventModel.filterResponse.subscribeBy(
+                scope.todoController.filterResponse.subscribeBy(
                     onNext = { (source, todos) ->
                         updateItems(source = source, todos = todos)
                     },
-                    onError = alertService::alertError
+                    onError = scope.alertService::alertError
                 )
-                eventModel.deleteResponse.subscribeBy(
-                    onNext = { id -> items.removeIf { it.id == id } },
-                    onError = alertService::alertError
+                scope.todoController.deleteResponse.subscribeBy(
+                    onNext = { todo -> items.remove(todo) },
+                    onError = scope.alertService::alertError
                 )
-                eventModel.updateResponse.subscribeBy(
+                scope.todoController.updateResponse.subscribeBy(
                     onNext = { todo ->
                         if (todayOnly.value) {
                             if (todo.display) {
@@ -178,62 +176,72 @@ class ToDoListView(
                             items[items.indexOfFirst { it.id == todo.id }] = todo
                         }
                     },
-                    onError = alertService::alertError
+                    onError = scope.alertService::alertError
                 )
             }
         }
 
         top {
             toolbar {
-                addButton = button {
+                button {
+                    id = "add-button"
                     graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply {
                         glyphSize = 14.0
                     }
                     tooltip("Add item")
                     action {
-                        ToDoEditor(
-                            eventModel = eventModel,
-                            mode = EditorMode.Add,
-                            todo = ToDo.default(),
-                            displayArea = displayArea
+                        find(
+                            type = ToDoEditor::class,
+                            scope = scope,
+                            params = mapOf(
+                                "mode" to EditorMode.Add,
+                                "todo" to ToDo.default(),
+                                "displayArea" to displayArea
+                            )
                         ).openModal(
                             primaryStage.style,
                             Modality.WINDOW_MODAL
                         )
                     }
                 }
-                deleteButton = button {
+                button {
+                    id = "delete-button"
                     graphic = FontAwesomeIconView(FontAwesomeIcon.TRASH_ALT).apply {
                         glyphSize = 14.0
                     }
                     tooltip("Delete selected item")
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
-                            if (confirmationService.confirm("Are you sure you want to delete '${todo.description}'?"))
-                                eventModel.deleteRequest.onNext(todo.id)
+                            if (scope.confirmationService.confirm("Are you sure you want to delete '${todo.description}'?"))
+                                scope.todoController.deleteRequest.onNext(todo)
                         }
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
                 }
-                refreshButton = button {
+                button {
+                    id = "refresh-button"
                     graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply {
                         glyphSize = 14.0
                     }
                     tooltip("Refresh table")
-                    action { eventModel.refreshRequest.onNext(token) }
+                    action { scope.todoController.refreshRequest.onNext(token) }
                 }
-                editButton = button {
+                button {
+                    id = "edit-button"
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply {
                         glyphSize = 14.0
                     }
                     tooltip("Edit item")
                     action {
-                        table.selectionModel.selectedItem?.let {
-                            ToDoEditor(
-                                eventModel = eventModel,
-                                mode = EditorMode.Edit,
-                                todo = it,
-                                displayArea = displayArea
+                        table.selectionModel.selectedItem?.let { todo ->
+                            find(
+                                type = ToDoEditor::class,
+                                scope = scope,
+                                params = mapOf(
+                                    "mode" to EditorMode.Edit,
+                                    "todo" to todo,
+                                    "displayArea" to displayArea
+                                )
                             ).openModal(
                                 primaryStage.style,
                                 Modality.WINDOW_MODAL
@@ -242,8 +250,8 @@ class ToDoListView(
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
                 }
-                filterText = textfield(filter)
-                todayCheckbox = checkbox("Today", todayOnly)
+                textfield(filter) { id = "filter-text" }
+                checkbox("Today", todayOnly)
             }
         }
     }

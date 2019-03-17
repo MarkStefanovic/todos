@@ -3,11 +3,12 @@ package src.services
 import mu.KLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import src.framework.DatabaseService
 import java.sql.Connection
 import java.sql.SQLException
 
 
-class Db(val url: String, driver: String) {
+class ProductionDb(val url: String, driver: String) : DatabaseService {
 
     companion object: KLogging()
 
@@ -15,7 +16,7 @@ class Db(val url: String, driver: String) {
         Database.connect(url = url, driver = driver)
     }
 
-    fun <T> execute(command: () -> T) : T? {
+    override fun <T> execute(command: () -> T): T? {
         with (TransactionManager.currentOrNew(Connection.TRANSACTION_SERIALIZABLE)) {
             return try {
                 command().apply {
