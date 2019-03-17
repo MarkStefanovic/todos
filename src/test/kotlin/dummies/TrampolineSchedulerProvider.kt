@@ -1,4 +1,4 @@
-package mockServices
+package dummies
 
 import io.reactivex.schedulers.Schedulers
 import src.framework.SchedulerProvider

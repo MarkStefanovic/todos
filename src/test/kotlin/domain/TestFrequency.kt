@@ -57,9 +57,9 @@ class TestFrequency {
 
     @ParameterizedTest
     @CsvSource(
-        "3, 2009-12-31, 5, 2010-01-03",
-        "3, 2010-01-01, 5, 2010-01-01",
-        "3, 2010-01-01, 0, 2010-01-01"
+        "3, 2009-12-31, 5, 2009-12-31",
+        "3, 2010-01-01, 0, 2010-01-01",
+        "3, 2009-01-01, 0, 2009-12-30"
     )
     fun `test XDays nextDate calculation`(xdays: Int, startDate: LocalDate, expireDays: Int, expected: LocalDate) {
         val actual =
@@ -68,26 +68,12 @@ class TestFrequency {
         assertEquals(expected, actual)
     }
 
-//    @ParameterizedTest
-//    @CsvSource(
-//        "3, 2018-10-01, 2018-10-01, 1970-01-01, 7, 5, 2018-10-4",
-//        "3, 2018-10-01, 2018-10-01, 1970-01-01, 7, 5, 2018-10-4"
-//    )
-//    fun `test XDays nextDate calculation`(
-//        days: Int, startDate: LocalDate, lastCompleted: LocalDate, advanceDays: Int, expireDays: Int,
-//        expected: Boolean) {
-//        val actual = XDays(startDate = startDate, days = days).nextDate(
-//            expireDays = expireDays, referenceDate = referenceDate
-//        )
-//        assertEquals(expected, actual)
-//    }
-
     @ParameterizedTest
     @CsvSource(
         "2010-01-01, 0, 1, 2010-12-31, true",
         "2010-01-01, 0, 1, 2010-01-01, false",
         "2010-01-01, 0, 0, 2010-01-01, false",
-        "2010-01-02, 1, 1, 2010-01-01, true"
+        "2010-01-02, 1, 1, 2010-01-01, false"  // if completed today, then it should not show up again today
     )
     fun `test XDays display logic`(
         nextDate: LocalDate,

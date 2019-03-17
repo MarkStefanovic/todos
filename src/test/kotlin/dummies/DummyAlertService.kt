@@ -1,8 +1,8 @@
-package mockServices
+package dummies
 
 import src.framework.AlertService
 
-class MockAlertService : AlertService {
+class DummyAlertService : AlertService {
     var lastErrorMessage: String? = null
 
     override fun alertError(error: Throwable) {

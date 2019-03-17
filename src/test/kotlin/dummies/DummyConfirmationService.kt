@@ -1,7 +1,7 @@
-package mockServices
+package dummies
 
 import src.framework.ConfirmationService
 
-class MockConfirmationService : ConfirmationService {
+class DummyConfirmationService : ConfirmationService {
     override fun confirm(message: String) = true
 }
