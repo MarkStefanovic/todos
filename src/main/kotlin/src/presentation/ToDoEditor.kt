@@ -208,48 +208,37 @@ class ToDoEditor : Fragment() {
     }
 
     private fun setAvailableFields(frequency: String?) {
-        val disableMonthday = { monthdayField.isVisible = false }
-        val enableMonthday = { monthdayField.isVisible = true }
-        val disableMonth = { monthField.isVisible = false }
-        val enableMonth = { monthField.isVisible = true }
-        val disableWeekday = { weekdayField.isVisible = false }
-        val enableWeekday = { weekdayField.isVisible = true }
-        val disableOnce = { onceField.isVisible = false }
-        val enableOnce = { onceField.isVisible = true }
-        val disableStartDate = { startDateField.isVisible = false }
-        val enableStartDate = { startDateField.isVisible = true }
-        val disableDays = { daysField.isVisible = false }
-        val enableDays = { daysField.isVisible = true }
         fun disableAll() {
-            disableStartDate()
-            disableDays()
-            disableMonthday()
-            disableMonth()
-            disableWeekday()
-            disableOnce()
+            startDateField.isVisible = false
+            startDateField.isVisible = false
+            daysField.isVisible = false
+            monthdayField.isVisible = false
+            monthField.isVisible = false
+            weekdayField.isVisible = false
+            onceField.isVisible = false
         }
         when (frequency) {
             "Once" -> {
                 disableAll()
-                enableOnce()
+                onceField.isVisible = true
             }
             "Weekly" -> {
                 disableAll()
-                enableWeekday()
+                weekdayField.isVisible = true
             }
             "Monthly" -> {
                 disableAll()
-                enableMonthday()
+                monthdayField.isVisible = true
             }
             "Yearly" -> {
                 disableAll()
-                enableMonthday()
-                enableMonth()
+                monthdayField.isVisible = true
+                monthField.isVisible = true
             }
             "XDays" -> {
                 disableAll()
-                enableStartDate()
-                enableDays()
+                startDateField.isVisible = true
+                daysField.isVisible = true
             }
             else -> {
                 disableAll()

@@ -24,9 +24,13 @@ compileKotlin {
 repositories {
     mavenLocal()
     mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-        maven { url "https://dl.bintray.com/kotlin/exposed" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://dl.bintray.com/kotlin/exposed" }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
@@ -70,12 +74,6 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-core:2.7"
     compile "ch.qos.logback:logback-classic:1.1.7"  // With Logback we don’t need to add SLF4J to our classpath
     compile "io.github.microutils:kotlin-logging:1.5.9"
-}
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
 }
 
 mainClassName = "src.app.MyApp"
