@@ -8,7 +8,7 @@ import java.sql.Connection
 import java.sql.SQLException
 
 
-class ProductionDb(val url: String, driver: String) : DatabaseService {
+class SqlDb(val url: String, driver: String) : DatabaseService {
 
     companion object: KLogging()
 
@@ -21,7 +21,6 @@ class ProductionDb(val url: String, driver: String) : DatabaseService {
             return try {
                 command().apply {
                     commit()
-                    close()
                 }
             } catch (e: SQLException) {
                 Companion.logger.error(e) { "SQL Error: $e" }

@@ -55,9 +55,6 @@ data class ToDo(
     val daysUntil: Long
         get() = LocalDate.now().until(nextDate, ChronoUnit.DAYS)
 
-    val displayAreaText: String
-        get() = displayArea.name
-
     val weekdayName: String
         get() = when (weekday) {
             1 -> "Monday"
@@ -114,16 +111,6 @@ data class ToDo(
 
     val item: ToDo
         get() = this
-
-//    override fun equals(other: Any?): Boolean {
-//        return when (other) {
-//            !is ToDo -> false
-//            id == other.id -> true
-//            else -> false
-//        }
-//    }
-//
-//    override fun hashCode() = id
 }
 
 /** Should the item be displayed on today's to-do list?*/

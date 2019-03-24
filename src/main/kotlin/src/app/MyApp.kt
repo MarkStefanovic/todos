@@ -16,20 +16,15 @@ import src.presentation.Styles
 import src.services.AsyncSchedulerProvider
 import src.services.PopupAlertService
 import src.services.PopupConfirmationService
-import src.services.ProductionDb
+import src.services.SqlDb
 import tornadofx.*
 
 val logger = KotlinLogging.logger { }
 
-
-// In file
-//Database.connect("jdbc:sqlite:/data/data.db", "org.sqlite.JDBC")
-// In memory
-//Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC")
 class MyApp : App(MainView::class, Styles::class) {
     private val alertService = PopupAlertService()
     private val confirmationService = PopupConfirmationService()
-    private val db = ProductionDb(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
+    private val db = SqlDb(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val schedulerProvider = AsyncSchedulerProvider()
     private val toDoRepository = ToDoRepository(db = db)
     private val todoController = RepositoryController(
@@ -68,9 +63,6 @@ class MyApp : App(MainView::class, Styles::class) {
                 }
             }
         }
-
-        // start up the event bus
-
     }
 
     override fun start(stage: Stage) {

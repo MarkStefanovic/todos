@@ -21,15 +21,11 @@ import java.time.LocalDate
 
 
 class ToDoListView : Fragment() {
-//class ToDoListView(token: Identifier) : View() {
-
     override val scope = super.scope as AppScope
 
     companion object : KLogging()
 
     private val token: Identifier by param()
-
-//    private val token = identifier as? Token ?: throw NotImplementedError("The token $token is not a valid token for the application.")
 
     private val displayArea =
         when (token) {
@@ -38,16 +34,7 @@ class ToDoListView : Fragment() {
             else -> throw Exception("Invalid token, $token, passed to the the ToDoList view.")
         }
 
-    // Control handles for testing
-    // TODO: find a better way of referencing the controls in the tests themselves
     private var table: TableView<ToDo> by singleAssign()
-//    var table: TableView<ToDo> by singleAssign()
-//    var addButton: Button by singleAssign()
-//    var deleteButton: Button by singleAssign()
-//    var refreshButton: Button by singleAssign()
-//    var editButton: Button by singleAssign()
-//    var filterText: TextField by singleAssign()
-//    var todayCheckbox: CheckBox by singleAssign()
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
@@ -64,9 +51,6 @@ class ToDoListView : Fragment() {
                     token to { todo: ToDo ->
                         description.toLowerCase() in todo.description.toLowerCase()
                     }
-//                    token to ToDos.select {
-//                        ToDos.description.lowerCase() like "%${description.toLowerCase()}%"
-//                    }
                 )
         }
         scope.todoController.refreshResponse.subscribe { value = "" }
