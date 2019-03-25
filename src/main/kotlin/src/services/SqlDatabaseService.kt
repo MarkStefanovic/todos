@@ -8,7 +8,7 @@ import java.sql.Connection
 import java.sql.SQLException
 
 
-class SqlDb(val url: String, driver: String) : DatabaseService {
+class SqlDatabaseService(val url: String, driver: String) : DatabaseService {
 
     companion object: KLogging()
 

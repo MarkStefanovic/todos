@@ -7,19 +7,19 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import src.services.SqlDb
+import src.services.SqlDatabaseService
 
 private object People : Table() {
     val firstName = varchar("firstName", 40)
     val lastName = varchar("lastName", 40)
 }
 
-class TestSqlDb {
-    private lateinit var db: SqlDb
+class TestSqlDatabaseService {
+    private lateinit var db: SqlDatabaseService
 
     @BeforeEach
     fun setUp() {
-        db = SqlDb(
+        db = SqlDatabaseService(
             url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
             driver = "org.h2.Driver"
         )

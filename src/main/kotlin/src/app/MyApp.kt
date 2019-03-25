@@ -16,7 +16,7 @@ import src.presentation.Styles
 import src.services.AsyncSchedulerProvider
 import src.services.PopupAlertService
 import src.services.PopupConfirmationService
-import src.services.SqlDb
+import src.services.SqlDatabaseService
 import tornadofx.*
 
 val logger = KotlinLogging.logger { }
@@ -24,7 +24,7 @@ val logger = KotlinLogging.logger { }
 class MyApp : App(MainView::class, Styles::class) {
     private val alertService = PopupAlertService()
     private val confirmationService = PopupConfirmationService()
-    private val db = SqlDb(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
+    private val db = SqlDatabaseService(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val schedulerProvider = AsyncSchedulerProvider()
     private val toDoRepository = ToDoRepository(db = db)
     private val todoController = RepositoryController(
