@@ -1,4 +1,4 @@
-package src.domain
+package domain
 
 fun org.joda.time.DateTime.toJavaLocalDate(): java.time.LocalDate =
     java.time.LocalDate.of(this.year, this.monthOfYear, this.dayOfMonth)

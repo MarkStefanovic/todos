@@ -1,22 +1,19 @@
-package src.app
+package app
 
+import domain.*
+import framework.RepositoryEventModel
 import javafx.scene.image.Image
 import javafx.stage.Stage
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
-import src.domain.ToDoRepository
-import src.domain.ToDos
-import src.domain.birthdays
-import src.domain.holidays
-import src.framework.RepositoryController
-import src.presentation.MainView
-import src.presentation.Styles
-import src.services.AsyncSchedulerProvider
-import src.services.PopupAlertService
-import src.services.PopupConfirmationService
-import src.services.SqlDatabaseService
+import presentation.MainView
+import presentation.Styles
+import services.AsyncSchedulerProvider
+import services.PopupAlertService
+import services.PopupConfirmationService
+import services.SqlDatabaseService
 import tornadofx.*
 
 val logger = KotlinLogging.logger { }
@@ -27,9 +24,11 @@ class MyApp : App(MainView::class, Styles::class) {
     private val db = SqlDatabaseService(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val schedulerProvider = AsyncSchedulerProvider()
     private val toDoRepository = ToDoRepository(db = db)
-    private val todoController = RepositoryController(
+    private val toDoEventModel = RepositoryEventModel<ToDo>(schedulerProvider = schedulerProvider)
+    private val todoController = ToDoController(
         schedulerProvider = schedulerProvider,
         alertService = alertService,
+        eventModel = toDoEventModel,
         repository = toDoRepository
     )
 
@@ -39,7 +38,7 @@ class MyApp : App(MainView::class, Styles::class) {
         scope = AppScope(
             alertService = alertService,
             confirmationService = confirmationService,
-            todoController = todoController
+            todoEventModel = toDoEventModel
         )
 
         // insert initial sql rows if creating new db
@@ -63,6 +62,8 @@ class MyApp : App(MainView::class, Styles::class) {
                 }
             }
         }
+
+        todoController.start()
     }
 
     override fun start(stage: Stage) {

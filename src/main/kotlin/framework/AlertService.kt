@@ -1,4 +1,4 @@
-package src.framework
+package framework
 
 interface AlertService {
     fun alertError(error: Throwable)

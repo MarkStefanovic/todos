@@ -1,4 +1,4 @@
-package src.presentation
+package presentation
 
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty

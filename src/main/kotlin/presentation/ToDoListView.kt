@@ -1,7 +1,13 @@
-package src.presentation
+package presentation
 
+import app.AppScope
+import app.Token
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView
+import domain.DisplayArea
+import domain.ToDo
+import domain.ToDo.Companion.NONE_DATE
+import framework.Identifier
 import io.reactivex.rxkotlin.subscribeBy
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
@@ -9,13 +15,7 @@ import javafx.geometry.Pos
 import javafx.scene.control.TableView
 import javafx.stage.Modality
 import mu.KLogging
-import src.app.AppScope
-import src.app.Token
-import src.domain.DisplayArea
-import src.domain.ToDo
-import src.domain.ToDo.Companion.NONE_DATE
-import src.framework.Identifier
-import src.presentation.Styles.Companion.centerAlignedCell
+import presentation.Styles.Companion.centerAlignedCell
 import tornadofx.*
 import java.time.LocalDate
 
@@ -29,8 +29,8 @@ class ToDoListView : Fragment() {
 
     private val displayArea =
         when (token) {
-            is Token.ReminderListView -> DisplayArea.Reminders
-            is Token.ToDoListView -> DisplayArea.ToDos
+            is Token.Reminder -> DisplayArea.Reminders
+            is Token.ToDo -> DisplayArea.ToDos
             else -> throw Exception("Invalid token, $token, passed to the the ToDoList view.")
         }
 
@@ -38,22 +38,22 @@ class ToDoListView : Fragment() {
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            scope.todoController.refreshRequest.onNext(token)
+            scope.todoEventModel.refreshRequest.onNext(token)
         }
     }
 
     private val filter = SimpleStringProperty("").apply {
         onChange { description ->
             if (description.isNullOrBlank())
-                scope.todoController.refreshRequest.onNext(token)
+                scope.todoEventModel.refreshRequest.onNext(token)
             else
-                scope.todoController.filterRequest.onNext(
+                scope.todoEventModel.filterRequest.onNext(
                     token to { todo: ToDo ->
                         description.toLowerCase() in todo.description.toLowerCase()
                     }
                 )
         }
-        scope.todoController.refreshResponse.subscribe { value = "" }
+        scope.todoEventModel.refreshResponse.subscribe { value = "" }
 
     }
 
@@ -91,7 +91,7 @@ class ToDoListView : Fragment() {
                                         else
                                             LocalDate.now()
                                     val updatedToDo = todo.copy(dateCompleted = dateCompleted)
-                                    scope.todoController.updateRequest.onNext(updatedToDo)
+                                    scope.todoEventModel.updateRequest.onNext(token to updatedToDo)
                                 }
                             }
                         }
@@ -108,17 +108,17 @@ class ToDoListView : Fragment() {
                     }
                 }
 
-                scope.todoController.addResponse.subscribeBy(
-                    onNext = {
+                scope.todoEventModel.addResponse.subscribeBy(
+                    onNext = { (_, todo) ->
                         if (todayOnly.value) {
-                            if (it.display) items.add(it)
+                            if (todo.display) items.add(todo)
                         } else {
-                            items.add(it)
+                            items.add(todo)
                         }
                     },
                     onError = scope.alertService::alertError
                 )
-                fun updateItems(source: Identifier, todos: List<ToDo>) {
+                fun updateItems(todos: List<ToDo>) {
                     val newToDos =
                         if (todayOnly.value) {
                             todos.filter { todo -> todo.display }
@@ -132,24 +132,24 @@ class ToDoListView : Fragment() {
                         items.setAll(newToDos)
                     }
                 }
-                scope.todoController.refreshResponse.subscribeBy(
-                    onNext = { (source, todos) ->
-                        updateItems(source = source, todos = todos)
+                scope.todoEventModel.refreshResponse.subscribeBy(
+                    onNext = { (_, todos) ->
+                        updateItems(todos = todos)
                     },
                     onError = scope.alertService::alertError
                 )
-                scope.todoController.filterResponse.subscribeBy(
-                    onNext = { (source, todos) ->
-                        updateItems(source = source, todos = todos)
+                scope.todoEventModel.filterResponse.subscribeBy(
+                    onNext = { (_, todos) ->
+                        updateItems(todos = todos)
                     },
                     onError = scope.alertService::alertError
                 )
-                scope.todoController.deleteResponse.subscribeBy(
-                    onNext = { todo -> items.remove(todo) },
+                scope.todoEventModel.deleteResponse.subscribeBy(
+                    onNext = { (_, todo) -> items.removeIf { it.id == todo.id } },
                     onError = scope.alertService::alertError
                 )
-                scope.todoController.updateResponse.subscribeBy(
-                    onNext = { todo ->
+                scope.todoEventModel.updateResponse.subscribeBy(
+                    onNext = { (_, todo) ->
                         if (todayOnly.value) {
                             if (todo.display) {
                                 items[items.indexOfFirst { it.id == todo.id }] = todo
@@ -162,6 +162,7 @@ class ToDoListView : Fragment() {
                     },
                     onError = scope.alertService::alertError
                 )
+                onSelectionChange { it?.let { scope.todoSelected.onNext(it) } }
             }
         }
 
@@ -180,7 +181,8 @@ class ToDoListView : Fragment() {
                             params = mapOf(
                                 "mode" to EditorMode.Add,
                                 "todo" to ToDo.default(),
-                                "displayArea" to displayArea
+                                "displayArea" to displayArea,
+                                "token" to token
                             )
                         ).openModal(
                             primaryStage.style,
@@ -197,7 +199,7 @@ class ToDoListView : Fragment() {
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
                             if (scope.confirmationService.confirm("Are you sure you want to delete '${todo.description}'?"))
-                                scope.todoController.deleteRequest.onNext(todo)
+                                scope.todoEventModel.deleteRequest.onNext(token to todo)
                         }
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
@@ -208,7 +210,7 @@ class ToDoListView : Fragment() {
                         glyphSize = 14.0
                     }
                     tooltip("Refresh table")
-                    action { scope.todoController.refreshRequest.onNext(token) }
+                    action { scope.todoEventModel.refreshRequest.onNext(token) }
                 }
                 button {
                     id = "edit-button"
@@ -224,7 +226,8 @@ class ToDoListView : Fragment() {
                                 params = mapOf(
                                     "mode" to EditorMode.Edit,
                                     "todo" to todo,
-                                    "displayArea" to displayArea
+                                    "displayArea" to displayArea,
+                                    "token" to token
                                 )
                             ).openModal(
                                 primaryStage.style,

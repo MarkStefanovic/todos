@@ -1,8 +1,8 @@
-package src.services
+package services
 
+import framework.ConfirmationService
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
-import src.framework.ConfirmationService
 
 class PopupConfirmationService : ConfirmationService {
     override fun confirm(message: String): Boolean =

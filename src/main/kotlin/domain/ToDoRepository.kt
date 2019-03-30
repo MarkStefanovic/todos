@@ -1,8 +1,8 @@
-package src.domain
+package domain
 
+import framework.DatabaseService
+import framework.Repository
 import org.jetbrains.exposed.sql.*
-import src.framework.DatabaseService
-import src.framework.Repository
 
 class ToDoRepository(private val db: DatabaseService) : Repository<ToDo>() {
     override fun add(newItem: ToDo): ToDo? =
@@ -33,32 +33,29 @@ class ToDoRepository(private val db: DatabaseService) : Repository<ToDo>() {
         return item
     }
 
-    override fun update(item: ToDo): ToDo? =
-        if ((item.frequency == "Once") and item.complete) {
-            delete(item)
-            null
-        } else {
-            db.execute {
-                ToDos.update({ ToDos.id eq item.id }) {
-                    it[description] = item.description
-                    it[frequency] = item.frequency
-                    it[month] = item.month
-                    it[weekday] = item.weekday
-                    it[monthday] = item.monthday
-                    it[year] = item.year
-                    it[weekNumber] = item.weekNumber
-                    it[dateAdded] = item.dateAdded.toJodaDateTime()
-                    it[dateCompleted] = item.dateCompleted.toJodaDateTime()
-                    it[startDate] = item.startDate.toJodaDateTime()
-                    it[days] = item.days
-                    it[expireDays] = item.expireDays
-                    it[advanceNotice] = item.advanceNotice
-                    it[note] = item.note
-                    it[displayArea] = item.displayArea.name
-                }
+
+    override fun update(item: ToDo): ToDo? {
+        db.execute {
+            ToDos.update({ ToDos.id eq item.id }) {
+                it[description] = item.description
+                it[frequency] = item.frequency
+                it[month] = item.month
+                it[weekday] = item.weekday
+                it[monthday] = item.monthday
+                it[year] = item.year
+                it[weekNumber] = item.weekNumber
+                it[dateAdded] = item.dateAdded.toJodaDateTime()
+                it[dateCompleted] = item.dateCompleted.toJodaDateTime()
+                it[startDate] = item.startDate.toJodaDateTime()
+                it[days] = item.days
+                it[expireDays] = item.expireDays
+                it[advanceNotice] = item.advanceNotice
+                it[note] = item.note
+                it[displayArea] = item.displayArea.name
             }
-            byId(item.id)
         }
+        return byId(item.id)
+    }
 
     override fun all(): List<ToDo>? =
         db.execute {

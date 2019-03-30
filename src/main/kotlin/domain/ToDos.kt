@@ -1,9 +1,9 @@
-package src.domain
+package domain
 
+import app.logger
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.joda.time.DateTime
-import src.app.logger
 import java.time.DayOfWeek
 
 

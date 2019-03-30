@@ -1,16 +1,17 @@
-package src.presentation
+package presentation
 
+import app.AppScope
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView
+import domain.DisplayArea
+import domain.ToDo
+import domain.getWeekdayByName
+import framework.Identifier
 import javafx.scene.control.Button
 import javafx.scene.control.DatePicker
 import javafx.scene.control.TextArea
 import javafx.scene.control.TextField
 import org.controlsfx.control.PrefixSelectionComboBox
-import src.app.AppScope
-import src.domain.DisplayArea
-import src.domain.ToDo
-import src.domain.getWeekdayByName
 import tornadofx.*
 import java.time.LocalDate
 
@@ -29,6 +30,7 @@ class ToDoEditor : Fragment() {
     private val mode: EditorMode by param()
     private val todo: ToDo by param()
     private val displayArea: DisplayArea by param()
+    private val token: Identifier by param()
 
     var advanceNoticeField: PrefixSelectionComboBox<Int> by singleAssign()
     var descriptionField: TextField by singleAssign()
@@ -192,9 +194,9 @@ class ToDoEditor : Fragment() {
                         else -> throw NotImplementedError()
                     }
                     if (mode == EditorMode.Edit) {
-                        scope.todoController.updateRequest.onNext(newToDo)
+                        scope.todoEventModel.updateRequest.onNext(token to newToDo)
                     } else {
-                        scope.todoController.addRequest.onNext(newToDo)
+                        scope.todoEventModel.addRequest.onNext(token to newToDo)
                     }
                 }
                 enableWhen(validationContext.valid)
@@ -203,8 +205,8 @@ class ToDoEditor : Fragment() {
 
         setAvailableFields(frequencyField.value)
 
-        scope.todoController.addResponse.subscribe { close() }
-        scope.todoController.updateResponse.subscribe { close() }
+        scope.todoEventModel.addResponse.subscribe { close() }
+        scope.todoEventModel.updateResponse.subscribe { close() }
     }
 
     private fun setAvailableFields(frequency: String?) {

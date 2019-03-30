@@ -1,4 +1,4 @@
-package src.framework
+package framework
 
 interface ConfirmationService {
     fun confirm(message: String): Boolean

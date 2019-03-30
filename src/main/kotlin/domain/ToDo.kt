@@ -1,4 +1,4 @@
-package src.domain
+package domain
 
 import java.time.DayOfWeek
 import java.time.LocalDate

@@ -1,9 +1,9 @@
-package src.services
+package services
 
+import framework.DatabaseService
 import mu.KLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import src.framework.DatabaseService
 import java.sql.Connection
 import java.sql.SQLException
 

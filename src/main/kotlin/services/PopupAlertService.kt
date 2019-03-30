@@ -1,8 +1,8 @@
-package src.services
+package services
 
+import framework.AlertService
 import javafx.scene.control.Alert
 import mu.KLogging
-import src.framework.AlertService
 
 class PopupAlertService : AlertService {
     companion object : KLogging()

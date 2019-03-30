@@ -1,8 +1,8 @@
-package src.services
+package services
 
+import framework.SchedulerProvider
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
-import src.framework.SchedulerProvider
 
 
 class AsyncSchedulerProvider : SchedulerProvider {

@@ -1,4 +1,4 @@
-package src.framework
+package framework
 
 abstract class Repository<T : Any> {
     abstract fun add(newItem: T): T?

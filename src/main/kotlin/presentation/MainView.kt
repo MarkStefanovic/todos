@@ -1,9 +1,9 @@
-package src.presentation
+package presentation
 
+import app.AppScope
+import app.Token
 import javafx.scene.text.Font.font
 import javafx.scene.text.FontWeight
-import src.app.AppScope
-import src.app.Token
 import tornadofx.*
 
 class MainView: View("ToDo List") {
@@ -19,8 +19,7 @@ class MainView: View("ToDo List") {
                     }
                 }
                 center {
-                    add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.ToDoListView)))
-//                    add(ToDoListView(token = Token.ToDoListView))
+                    add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.ToDo)))
                 }
             }
         }
@@ -33,12 +32,12 @@ class MainView: View("ToDo List") {
                     }
                 }
                 center {
-                    add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.ReminderListView)))
+                    add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.Reminder)))
 //                    add(ToDoListView(token = Token.ReminderListView))
                 }
             }
         }
 
-        scope.todoController.refreshRequest.onNext(Token.ToDoListView)
+        scope.todoEventModel.refreshRequest.onNext(Token.ToDo)
     }
 }

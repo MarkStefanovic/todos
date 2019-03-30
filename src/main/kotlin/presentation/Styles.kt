@@ -1,4 +1,4 @@
-package src.presentation
+package presentation
 
 import javafx.geometry.Pos
 import javafx.scene.effect.DropShadow
