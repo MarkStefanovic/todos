@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import src.services.SqlDatabaseService
 
 private object People : Table() {
     val firstName = varchar("firstName", 40)
@@ -15,11 +14,11 @@ private object People : Table() {
 }
 
 class TestSqlDatabaseService {
-    private lateinit var db: SqlDatabaseService
+    private lateinit var testDb: SqlDatabaseService
 
     @BeforeEach
     fun setUp() {
-        db = SqlDatabaseService(
+        testDb = SqlDatabaseService(
             url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
             driver = "org.h2.Driver"
         )
@@ -27,14 +26,14 @@ class TestSqlDatabaseService {
 
     @Test
     fun `test execute method commits transaction`() {
-        db.execute {
+        testDb.execute {
             SchemaUtils.create(People)
             People.insert {
                 it[firstName] = "Mark"
                 it[lastName] = "Stefanovic"
             }
         }
-        val person = db.execute {
+        val person = testDb.execute {
             People.selectAll().firstOrNull()
         }
         assertEquals("Mark", person?.get(People.firstName))

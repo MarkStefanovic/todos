@@ -1,6 +1,6 @@
 package dummies
 
-import src.framework.AlertService
+import framework.AlertService
 
 class DummyAlertService : AlertService {
     var lastErrorMessage: String? = null

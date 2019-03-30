@@ -1,6 +1,9 @@
 package presentation
 
-import dummies.*
+import app.AppScope
+import app.Token
+import domain.ToDo
+import framework.Identifier
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import javafx.application.Platform
@@ -16,12 +19,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
 import org.testfx.framework.junit5.ApplicationTest
-import src.app.AppScope
-import src.app.Token
-import src.domain.ToDo
-import src.framework.Identifier
-import src.framework.RepositoryController
-import src.presentation.ToDoListView
 import tornadofx.*
 
 
@@ -40,19 +37,11 @@ class TestToDoListView : ApplicationTest() {
     @BeforeEach
     fun setUp() {
         stage = FxToolkit.registerPrimaryStage()
-        scope = AppScope(
-            todoController = RepositoryController(
-                repository = DummyRepository(items = holidays.toMutableList()),
-                alertService = DummyAlertService(),
-                schedulerProvider = TrampolineSchedulerProvider()
-            ),
-            alertService = DummyAlertService(),
-            confirmationService = DummyConfirmationService()
-        )
+        scope = setUpTestScope()
         view = find(
             type = ToDoListView::class,
             scope = scope,
-            params = mapOf("token" to Token.ReminderListView)
+            params = mapOf("token" to Token.Reminder)
         )
         interact {
             stage.scene = Scene(view.root)
@@ -69,7 +58,7 @@ class TestToDoListView : ApplicationTest() {
 
     private fun refresh() {
         val observer = TestObserver<Pair<Identifier, List<ToDo>>>()
-        scope.todoController.refreshResponse.subscribe(observer)
+        scope.todoEventModel.refreshResponse.subscribe(observer)
 
         view.todayOnly.value = false
         clickOn(refreshButton)
@@ -94,11 +83,18 @@ class TestToDoListView : ApplicationTest() {
     @Test
     fun `delete button should delete selected item`() {
         refresh()
-        Platform.runLater {
-            table.selectWhere { it.id == 2 }
-            Assertions.assertEquals(2, table.selectionModel.selectedItem.id)
-        }
+
+        val deleteObserver = TestObserver<Pair<Identifier, ToDo>>()
+        scope.todoEventModel.deleteResponse.subscribe(deleteObserver)
+        val selectObserver = TestObserver<ToDo>()
+        scope.todoSelected.subscribe(selectObserver)
+
+        Platform.runLater { table.selectWhere { it.id == 2 } }
+        selectObserver.awaitCount(1)
+        selectObserver.assertValue { it.id == 2 }
         clickOn(deleteButton)
+        deleteObserver.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
+        deleteObserver.assertValue { (_, todo) -> todo.id == 2 }
         Assertions.assertNull(table.items.find { it.id == 2 })
         Assertions.assertEquals(6, table.items.count())
     }

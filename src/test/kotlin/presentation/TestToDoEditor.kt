@@ -1,6 +1,10 @@
 package presentation
 
-import dummies.*
+import app.AppScope
+import app.Token
+import domain.DisplayArea
+import domain.ToDo
+import framework.Identifier
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import javafx.scene.Scene
@@ -10,38 +14,20 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
 import org.testfx.framework.junit5.ApplicationTest
-import src.app.AppScope
-import src.domain.DisplayArea
-import src.domain.ToDo
-import src.framework.RepositoryController
-import src.presentation.EditorMode
-import src.presentation.ToDoEditor
 import tornadofx.*
 import java.time.LocalDate
 
 
 class TestToDoEditor : ApplicationTest() {
     private val today = LocalDate.now()
-
-
     private lateinit var stage: Stage
     private lateinit var scope: AppScope
     private lateinit var view: ToDoEditor
-    private lateinit var controller: RepositoryController<ToDo>
 
     @BeforeEach
     fun setUp() {
         stage = FxToolkit.registerPrimaryStage()
-        scope = AppScope(
-            todoController = RepositoryController(
-                repository = DummyRepository(items = holidays.toMutableList()),
-                alertService = DummyAlertService(),
-                schedulerProvider = TrampolineSchedulerProvider()
-            ),
-            alertService = DummyAlertService(),
-            confirmationService = DummyConfirmationService()
-        )
-
+        scope = setUpTestScope()
     }
 
     private fun openEditor(mode: EditorMode, todo: ToDo, displayArea: DisplayArea) {
@@ -51,7 +37,8 @@ class TestToDoEditor : ApplicationTest() {
             params = mapOf(
                 "mode" to mode,
                 "todo" to todo,
-                "displayArea" to displayArea
+                "displayArea" to displayArea,
+                "token" to Token.Reminder
             )
         )
         interact {
@@ -125,10 +112,10 @@ class TestToDoEditor : ApplicationTest() {
             displayArea = DisplayArea.Reminders
         )
         openEditor(mode = EditorMode.Edit, todo = todo, displayArea = DisplayArea.Reminders)
-        val observer = TestObserver<ToDo>()
-        scope.todoController.updateResponse.subscribe(observer)
+        val observer = TestObserver<Pair<Identifier, ToDo>>()
+        scope.todoEventModel.updateResponse.subscribe(observer)
         clickOn(view.saveButton)
         observer.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 500)
-        observer.assertValue(todo)
+        observer.assertValue(Token.Reminder to todo)
     }
 }

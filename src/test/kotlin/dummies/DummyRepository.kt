@@ -1,6 +1,6 @@
 package dummies
 
-import src.framework.Repository
+import framework.Repository
 
 class DummyRepository<T : Any>(var items: MutableList<T>) : Repository<T>() {
     override fun add(newItem: T): T? {

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import src.domain.*
 import java.time.DayOfWeek
 import java.time.LocalDate
 
