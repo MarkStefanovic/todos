@@ -15,7 +15,7 @@ class ToDoController(
 ) {
     override fun update(request: Pair<Identifier, ToDo>) {
         val (token, item) = request
-        if ((item.frequency == "Once") and item.complete) {
+        if (item.frequency == "Once" && item.complete) {
             eventModel.deleteRequest.onNext(token to item)
         } else {
             super.update(token to item)

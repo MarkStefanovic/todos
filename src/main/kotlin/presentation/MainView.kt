@@ -33,7 +33,6 @@ class MainView: View("ToDo List") {
                 }
                 center {
                     add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.Reminder)))
-//                    add(ToDoListView(token = Token.ReminderListView))
                 }
             }
         }

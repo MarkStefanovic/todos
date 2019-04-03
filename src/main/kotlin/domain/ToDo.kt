@@ -107,7 +107,7 @@ data class ToDo(
         get() = LocalDate.of(year, month, monthday)
 
     val complete: Boolean
-        get() = !display and (dateCompleted != NONE_DATE)
+        get() = !display && dateCompleted != NONE_DATE
 
     val item: ToDo
         get() = this
@@ -123,8 +123,8 @@ fun displayToDo(
 ): Boolean {
     val advanceStart = nextDate.minusDays(advanceDays.toLong())
     val expireEnd = nextDate.plusDays(expireDays.toLong())
-    val lastCompletedInCurrentWindow = (lastCompleted >= advanceStart) and (lastCompleted <= expireEnd)
-    val referenceDateInCurrentWindow = (referenceDate >= advanceStart) and (referenceDate <= expireEnd)
+    val lastCompletedInCurrentWindow = lastCompleted >= advanceStart && lastCompleted <= expireEnd
+    val referenceDateInCurrentWindow = referenceDate >= advanceStart && referenceDate <= expireEnd
     return when {
         lastCompletedInCurrentWindow -> false
         referenceDateInCurrentWindow -> true

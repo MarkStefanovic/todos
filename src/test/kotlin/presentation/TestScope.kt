@@ -28,8 +28,14 @@ fun setUpTestScope(): AppScope {
                 displayArea = DisplayArea.Reminders
             ),
             ToDo.default().copy(
-                id = 2, description = "Christmas", frequency = "Yearly", month = 12, monthday = 25, advanceNotice = 14,
-                expireDays = 3, displayArea = DisplayArea.Reminders
+                id = 2,
+                description = "Christmas",
+                frequency = "Yearly",
+                month = 12,
+                monthday = 25,
+                advanceNotice = 14,
+                expireDays = 3,
+                displayArea = DisplayArea.Reminders
             ),
             ToDo.default().copy(
                 id = 3,
@@ -65,11 +71,22 @@ fun setUpTestScope(): AppScope {
                 displayArea = DisplayArea.Reminders
             ),
             ToDo.default().copy(
-                id = 6, description = "New Year's", frequency = "Yearly", month = 1, monthday = 1, advanceNotice = 14,
-                expireDays = 3, displayArea = DisplayArea.Reminders
+                id = 6,
+                description =
+                "New Year's",
+                frequency = "Yearly",
+                month = 1,
+                monthday = 1,
+                advanceNotice = 14,
+                expireDays = 3,
+                displayArea = DisplayArea.Reminders
             ),
             ToDo.default().copy(
-                id = 7, description = "Easter", frequency = "Easter", advanceNotice = 14, expireDays = 3,
+                id = 7,
+                description = "Easter",
+                frequency = "Easter",
+                advanceNotice = 14,
+                expireDays = 3,
                 displayArea = DisplayArea.Reminders
             )
         )

@@ -109,9 +109,10 @@ class ToDoListView : Fragment() {
                 }
 
                 scope.todoEventModel.addResponse.subscribeBy(
-                    onNext = { (_, todo) ->
+                    onNext = { (id, todo) ->
                         if (todayOnly.value) {
-                            if (todo.display) items.add(todo)
+                            if (id == token && todo.display)
+                                items.add(todo)
                         } else {
                             items.add(todo)
                         }
