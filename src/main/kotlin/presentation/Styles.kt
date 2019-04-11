@@ -153,5 +153,11 @@ class Styles : Stylesheet() {
                 alignment = Pos.CENTER
             }
         }
+
+        tooltip {
+            text {
+                fill = lightTextColor
+            }
+        }
     }
 }
