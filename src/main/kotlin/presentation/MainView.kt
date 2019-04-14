@@ -8,6 +8,9 @@ import tornadofx.*
 
 class MainView: View("ToDo List") {
     override val scope = super.scope as AppScope
+
+    private val todos = find<ToDoListView>(scope = scope, params = mapOf("token" to Token.ToDo))
+    private val reminders = find<ToDoListView>(scope = scope, params = mapOf("token" to Token.Reminder))
     override val root = borderpane {
         val labelHeaderFont = font("Arial", FontWeight.BOLD, 14.0)
         center {
@@ -19,7 +22,7 @@ class MainView: View("ToDo List") {
                     }
                 }
                 center {
-                    add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.ToDo)))
+                    add(todos)
                 }
             }
         }
@@ -32,11 +35,15 @@ class MainView: View("ToDo List") {
                     }
                 }
                 center {
-                    add(find<ToDoListView>(scope = scope, params = mapOf("token" to Token.Reminder)))
+                    add(reminders)
                 }
             }
         }
 
         scope.todoEventModel.refreshRequest.onNext(Token.ToDo)
+    }
+
+    override fun onDock() {
+        todos.root.requestFocus()
     }
 }

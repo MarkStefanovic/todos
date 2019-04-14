@@ -209,6 +209,10 @@ class ToDoEditor : Fragment() {
         scope.todoEventModel.updateResponse.subscribe { close() }
     }
 
+    override fun onDock() {
+        descriptionField.requestFocus()
+    }
+
     private fun setAvailableFields(frequency: String?) {
         fun disableAll() {
             startDateField.isVisible = false
