@@ -174,7 +174,9 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Add item")
+                    val hotkey = if (token == Token.ToDo) "ctrl+a" else "alt+a"
+                    tooltip("Add item ($hotkey)")
+                    shortcut(hotkey)
                     action {
                         find(
                             type = ToDoEditor::class,
@@ -196,7 +198,9 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.TRASH_ALT).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Delete selected item")
+                    val hotkey = if (token == Token.ToDo) "ctrl+x" else "alt+x"
+                    tooltip("Delete selected item ($hotkey)")
+                    shortcut(hotkey)
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
                             if (scope.confirmationService.confirm("Are you sure you want to delete '${todo.description}'?"))
@@ -210,7 +214,9 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Refresh table")
+                    val hotkey = if (token == Token.ToDo) "ctrl+r" else "alt+r"
+                    tooltip("Refresh ($hotkey)")
+                    shortcut(hotkey)
                     action { scope.todoEventModel.refreshRequest.onNext(token) }
                 }
                 button {
@@ -218,7 +224,9 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply {
                         glyphSize = 14.0
                     }
-                    tooltip("Edit item")
+                    val hotkey = if (token == Token.ToDo) "ctrl+e" else "alt+e"
+                    tooltip("Edit item ($hotkey)")
+                    shortcut(hotkey)
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
                             find(
