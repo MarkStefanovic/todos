@@ -13,8 +13,8 @@ import java.time.LocalDate
 
 
 fun Field.bindToChildVisibility(childNode: Node) : Field {
-    childNode.visibleProperty().onChange { it ->
-        if (it) {
+    childNode.visibleProperty().onChange { childIsVisible ->
+        if (childIsVisible) {
             this.isVisible = true
             isManaged = true
         } else {
