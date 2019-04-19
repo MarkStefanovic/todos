@@ -66,7 +66,7 @@ class ToDoListView : Fragment() {
 
         center {
             table = tableview {
-                id = "table"
+                //                id = "table"
                 readonlyColumn("Description", ToDo::description) {
                     prefWidth = 300.0
                 }
@@ -108,61 +108,6 @@ class ToDoListView : Fragment() {
                     }
                 }
 
-                scope.todoEventModel.addResponse.subscribeBy(
-                    onNext = { (id, todo) ->
-                        if (todayOnly.value) {
-                            if (id == token && todo.display)
-                                items.add(todo)
-                        } else {
-                            items.add(todo)
-                        }
-                    },
-                    onError = scope.alertService::alertError
-                )
-                fun updateItems(todos: List<ToDo>) {
-                    val newToDos =
-                        if (todayOnly.value) {
-                            todos.filter { todo -> todo.display }
-                        } else {
-                            todos
-                        }.filter { todo -> todo.displayArea == displayArea }
-                    val prior = this@tableview.items.toSet()
-                    val new = newToDos.toSet()
-                    val changes = (new - prior) + (prior - new)
-                    if (changes.count() > 0) {
-                        items.setAll(newToDos)
-                    }
-                }
-                scope.todoEventModel.refreshResponse.subscribeBy(
-                    onNext = { (_, todos) ->
-                        updateItems(todos = todos)
-                    },
-                    onError = scope.alertService::alertError
-                )
-                scope.todoEventModel.filterResponse.subscribeBy(
-                    onNext = { (_, todos) ->
-                        updateItems(todos = todos)
-                    },
-                    onError = scope.alertService::alertError
-                )
-                scope.todoEventModel.deleteResponse.subscribeBy(
-                    onNext = { (_, todo) -> items.removeIf { it.id == todo.id } },
-                    onError = scope.alertService::alertError
-                )
-                scope.todoEventModel.updateResponse.subscribeBy(
-                    onNext = { (_, todo) ->
-                        if (todayOnly.value) {
-                            if (todo.display) {
-                                items[items.indexOfFirst { it.id == todo.id }] = todo
-                            } else {
-                                items.removeIf { it.id == todo.id }
-                            }
-                        } else {
-                            items[items.indexOfFirst { it.id == todo.id }] = todo
-                        }
-                    },
-                    onError = scope.alertService::alertError
-                )
                 onSelectionChange { it?.let { scope.todoSelected.onNext(it) } }
             }
         }
@@ -250,5 +195,72 @@ class ToDoListView : Fragment() {
                 checkbox("Today", todayOnly)
             }
         }
+
+        scope.todoEventModel.addResponse.subscribeBy(
+            onNext = { (id, todo) ->
+                if (todayOnly.value) {
+                    if (id == token && todo.display)
+                        table.items.add(todo)
+                } else {
+                    table.items.add(todo)
+                }
+            },
+            onError = scope.alertService::alertError
+        )
+        fun updateItems(todos: List<ToDo>) {
+            val newToDos =
+                if (todayOnly.value) {
+                    todos.filter { todo -> todo.display }
+                } else {
+                    todos
+                }.filter { todo -> todo.displayArea == displayArea }
+            val prior = table.items.toSet()
+            val new = newToDos.toSet()
+            val changes = (new - prior) + (prior - new)
+            if (changes.count() > 0) {
+                table.items.setAll(newToDos)
+            }
+        }
+        scope.todoEventModel.refreshResponse.subscribeBy(
+            onNext = { (_, todos) ->
+                updateItems(todos = todos)
+            },
+            onError = scope.alertService::alertError
+        )
+        scope.todoEventModel.filterResponse.subscribeBy(
+            onNext = { (_, todos) ->
+                updateItems(todos = todos)
+            },
+            onError = scope.alertService::alertError
+        )
+        scope.todoEventModel.deleteResponse.subscribeBy(
+            onNext = { (_, todo) ->
+                table.items.removeIf { it.id == todo.id }
+            },
+            onError = scope.alertService::alertError
+        )
+        fun updateItem(todo: ToDo) {
+            val ix = table.items.indexOfFirst { it.id == todo.id }
+            if (ix == -1)
+                throw Exception("The updated item $todo could not be found on the table.")
+            else
+                table.items[ix] = todo
+        }
+        scope.todoEventModel.updateResponse.subscribeBy(
+            onNext = { (_, todo) ->
+                if (todo.display && todo.displayArea == displayArea) {
+                    if (todayOnly.value) {
+                        if (todo.display) {
+                            updateItem(todo)
+                        } else {
+                            table.items.removeIf { it.id == todo.id }
+                        }
+                    } else {
+                        updateItem(todo)
+                    }
+                }
+            },
+            onError = scope.alertService::alertError
+        )
     }
 }

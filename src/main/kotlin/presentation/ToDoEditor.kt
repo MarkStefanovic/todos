@@ -150,8 +150,7 @@ class ToDoEditor : Fragment() {
                 graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply { glyphSize = 18.0 }
                 isDefaultButton = true
                 action {
-                    val baseNewToDo = ToDo.default().copy(
-                        id = todo.id,
+                    val baseNewToDo = todo.copy(
                         description = descriptionField.text,
                         frequency = frequencyField.value,
                         displayArea = DisplayArea.valueOf(displayArea.name),
@@ -204,9 +203,10 @@ class ToDoEditor : Fragment() {
         }
 
         setAvailableFields(frequencyField.value)
-
-        scope.todoEventModel.addResponse.subscribe { close() }
-        scope.todoEventModel.updateResponse.subscribe { close() }
+        if (mode == EditorMode.Add)
+            scope.todoEventModel.addResponse.subscribe { close() }
+        else
+            scope.todoEventModel.updateResponse.subscribe { close() }
     }
 
     override fun onDock() {
