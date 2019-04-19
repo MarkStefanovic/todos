@@ -115,7 +115,7 @@ class TestToDoEditor : ApplicationTest() {
         val observer = TestObserver<Pair<Identifier, ToDo>>()
         scope.todoEventModel.updateResponse.subscribe(observer)
         clickOn(view.saveButton)
-        observer.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 500)
+        observer.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 5000)
         observer.assertValue(Token.Reminder to todo)
     }
 }
