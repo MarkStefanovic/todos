@@ -14,6 +14,7 @@ class Styles : Stylesheet() {
         val lightTextColor = mainColor.derive(0.9)
         val highlightColor = Color.DARKCYAN
         val centerAlignedCell by cssclass()
+        val rightAlignedCell by cssclass()
         val flat = mixin {
             backgroundInsets += box(0.px)
             borderColor += box(mainColor)
@@ -151,6 +152,12 @@ class Styles : Stylesheet() {
         centerAlignedCell {
             and(tableCell) {
                 alignment = Pos.CENTER
+            }
+        }
+
+        rightAlignedCell {
+            and(tableCell) {
+                alignment = Pos.TOP_RIGHT
             }
         }
 
