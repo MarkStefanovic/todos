@@ -149,7 +149,7 @@ class ToDoListView(
                             ToDoEditor(
                                 eventModel = eventModel,
                                 mode = EditorMode.Edit,
-                                todo = ToDo.default(),
+                                todo = todo,
                                 displayArea = displayArea
                             ).openModal(
                                 primaryStage.style,
