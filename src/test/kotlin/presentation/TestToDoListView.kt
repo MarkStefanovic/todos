@@ -1,9 +1,8 @@
 package presentation
 
 import app.AppScope
-import app.Token
+import domain.DisplayArea
 import domain.ToDo
-import framework.Identifier
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import javafx.application.Platform
@@ -12,9 +11,7 @@ import javafx.scene.control.Button
 import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.stage.Stage
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
@@ -38,10 +35,11 @@ class TestToDoListView : ApplicationTest() {
     fun setUp() {
         stage = FxToolkit.registerPrimaryStage()
         scope = setUpTestScope()
-        view = find(
-            type = ToDoListView::class,
-            scope = scope,
-            params = mapOf("token" to Token.Reminder)
+        view = ToDoListView(
+            alertService = scope.alertService,
+            confirmationService = scope.confirmationService,
+            displayArea = DisplayArea.Reminders,
+            eventModel = scope.reminderEventModel
         )
         interact {
             stage.scene = Scene(view.root)
@@ -57,10 +55,10 @@ class TestToDoListView : ApplicationTest() {
     }
 
     private fun refresh() {
-        val observer = TestObserver<Pair<Identifier, List<ToDo>>>()
-        scope.todoEventModel.refreshResponse.subscribe(observer)
-
         view.todayOnly.value = false
+
+        val observer = TestObserver<List<ToDo>>()
+        scope.reminderEventModel.refreshResponse.subscribe(observer)
         clickOn(refreshButton)
 
         observer.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
@@ -77,40 +75,41 @@ class TestToDoListView : ApplicationTest() {
     @Test
     fun `when today checkbox off refresh should display all rows`() {
         refresh()
-        Assertions.assertEquals(7, table.items.count())
+        assertEquals(7, table.items.count())
     }
 
     @Test
     fun `delete button should delete selected item`() {
         refresh()
 
-        val deleteObserver = TestObserver<Pair<Identifier, ToDo>>()
-        scope.todoEventModel.deleteResponse.subscribe(deleteObserver)
+        val deleteObserver = TestObserver<ToDo>()
         val selectObserver = TestObserver<ToDo>()
-        scope.todoSelected.subscribe(selectObserver)
+
+        scope.reminderEventModel.deleteResponse.subscribe(deleteObserver)
+        scope.reminderEventModel.itemSelected.subscribe(selectObserver)
 
         Platform.runLater { table.selectWhere { it.id == 2 } }
         selectObserver.awaitCount(1)
         selectObserver.assertValue { it.id == 2 }
         clickOn(deleteButton)
         deleteObserver.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 1000)
-        deleteObserver.assertValue { (_, todo) -> todo.id == 2 }
-        Assertions.assertNull(table.items.find { it.id == 2 })
-        Assertions.assertEquals(6, table.items.count())
+        deleteObserver.assertValue { todo -> todo.id == 2 }
+        assertNull(table.items.find { it.id == 2 })
+        assertEquals(6, table.items.count())
     }
 
-    @Test
-    fun `add button with no selection should open fresh ToDoEditor`() {
-
-    }
-
-    @Test
-    fun `add button with selection should open todo in ToDoEditor`() {
-
-    }
-
-    @Test
-    fun `filter textbox should filter displayed todos`() {
-
-    }
+//    @Test
+//    fun `add button with no selection should open fresh ToDoEditor`() {
+//
+//    }
+//
+//    @Test
+//    fun `add button with selection should open todo in ToDoEditor`() {
+//
+//    }
+//
+//    @Test
+//    fun `filter textbox should filter displayed todos`() {
+//
+//    }
 }

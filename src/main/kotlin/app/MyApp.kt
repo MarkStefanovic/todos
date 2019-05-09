@@ -23,7 +23,8 @@ class MyApp : App(MainView::class, Styles::class) {
     private val confirmationService = PopupConfirmationService()
     private val db = SqlDatabaseService(url = "jdbc:sqlite:./app.db", driver = "org.sqlite.JDBC")
     private val schedulerProvider = AsyncSchedulerProvider()
-    private val toDoRepository = ToDoRepository(db = db)
+
+    private val toDoRepository = ToDoRepository(db = db, displayArea = DisplayArea.ToDos)
     private val toDoEventModel = RepositoryEventModel<ToDo>(schedulerProvider = schedulerProvider)
     private val todoController = ToDoController(
         schedulerProvider = schedulerProvider,
@@ -32,13 +33,23 @@ class MyApp : App(MainView::class, Styles::class) {
         repository = toDoRepository
     )
 
+    private val reminderRepository = ToDoRepository(db = db, displayArea = DisplayArea.Reminders)
+    private val reminderEventModel = RepositoryEventModel<ToDo>(schedulerProvider = schedulerProvider)
+    private val reminderController = ToDoController(
+        schedulerProvider = schedulerProvider,
+        alertService = alertService,
+        eventModel = reminderEventModel,
+        repository = reminderRepository
+    )
+
     init {
         logger.debug("Starting App")
 
         scope = AppScope(
             alertService = alertService,
             confirmationService = confirmationService,
-            todoEventModel = toDoEventModel
+            todoEventModel = toDoEventModel,
+            reminderEventModel = reminderEventModel
         )
 
         // insert initial sql rows if creating new db
@@ -64,6 +75,7 @@ class MyApp : App(MainView::class, Styles::class) {
         }
 
         todoController.start()
+        reminderController.start()
     }
 
     override fun start(stage: Stage) {

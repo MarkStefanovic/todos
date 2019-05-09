@@ -1,12 +1,11 @@
 package presentation
 
-import app.AppScope
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView
 import domain.DisplayArea
 import domain.ToDo
 import domain.getWeekdayByName
-import framework.Identifier
+import framework.RepositoryEventModel
 import javafx.scene.control.Button
 import javafx.scene.control.DatePicker
 import javafx.scene.control.TextArea
@@ -23,14 +22,12 @@ enum class EditorMode {
     Add, Edit
 }
 
-class ToDoEditor : Fragment() {
-
-    override val scope = super.scope as AppScope
-
-    private val mode: EditorMode by param()
-    private val todo: ToDo by param()
-    private val displayArea: DisplayArea by param()
-    private val token: Identifier by param()
+class ToDoEditor(
+    private val eventModel: RepositoryEventModel<ToDo>,
+    private val mode: EditorMode,
+    private val todo: ToDo,
+    private val displayArea: DisplayArea
+) : Fragment() {
 
     var advanceNoticeField: PrefixSelectionComboBox<Int> by singleAssign()
     var descriptionField: TextField by singleAssign()
@@ -193,9 +190,9 @@ class ToDoEditor : Fragment() {
                         else -> throw NotImplementedError()
                     }
                     if (mode == EditorMode.Edit) {
-                        scope.todoEventModel.updateRequest.onNext(token to newToDo)
+                        eventModel.updateRequest.onNext(newToDo)
                     } else {
-                        scope.todoEventModel.addRequest.onNext(token to newToDo)
+                        eventModel.addRequest.onNext(newToDo)
                     }
                 }
                 enableWhen(validationContext.valid)
@@ -204,9 +201,9 @@ class ToDoEditor : Fragment() {
 
         setAvailableFields(frequencyField.value)
         if (mode == EditorMode.Add)
-            scope.todoEventModel.addResponse.subscribe { close() }
+            eventModel.addResponse.subscribe { close() }
         else
-            scope.todoEventModel.updateResponse.subscribe { close() }
+            eventModel.updateResponse.subscribe { close() }
     }
 
     override fun onDock() {

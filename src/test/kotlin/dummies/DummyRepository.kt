@@ -8,14 +8,14 @@ class DummyRepository<T : Any>(var items: MutableList<T>) : Repository<T>() {
         return newItem
     }
 
-    override fun all(): List<T>? = items
+    override fun all(): List<T> = items
 
     override fun delete(item: T): T? {
         items.remove(item)
         return item
     }
 
-    override fun filter(criteria: (T) -> Boolean): List<T>? = items.filter(criteria)
+    override fun filter(criteria: (T) -> Boolean): List<T> = items.filter(criteria)
 
     override fun update(item: T): T? {
         items.remove(item)

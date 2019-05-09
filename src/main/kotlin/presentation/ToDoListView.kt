@@ -1,16 +1,15 @@
 package presentation
 
-import app.AppScope
-import app.Token
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView
 import domain.DisplayArea
 import domain.ToDo
 import domain.ToDo.Companion.NONE_DATE
-import framework.Identifier
+import framework.AlertService
+import framework.ConfirmationService
+import framework.RepositoryEventModel
 import io.reactivex.rxkotlin.subscribeBy
 import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.TableView
 import javafx.stage.Modality
@@ -20,45 +19,21 @@ import tornadofx.*
 import java.time.LocalDate
 
 
-class ToDoListView : Fragment() {
-    override val scope = super.scope as AppScope
+class ToDoListView(
+    private val alertService: AlertService,
+    private val confirmationService: ConfirmationService,
+    private val displayArea: DisplayArea,
+    private val eventModel: RepositoryEventModel<ToDo>
+) : Fragment() {
 
     companion object : KLogging()
-
-    private val token: Identifier by param()
-
-    private val displayArea =
-        when (token) {
-            is Token.Reminder -> DisplayArea.Reminders
-            is Token.ToDo -> DisplayArea.ToDos
-            else -> throw Exception("Invalid token, $token, passed to the the ToDoList view.")
-        }
 
     private var table: TableView<ToDo> by singleAssign()
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
-            scope.todoEventModel.refreshRequest.onNext(token)
+            eventModel.refreshRequest.onNext(Unit)
         }
-    }
-
-    private val filter = SimpleStringProperty("").apply {
-        onChange { description ->
-            if (description.isNullOrBlank())
-                scope.todoEventModel.refreshRequest.onNext(token)
-            else
-                scope.todoEventModel.filterRequest.onNext(
-                    token to { todo: ToDo ->
-                        description.toLowerCase() in todo.description.toLowerCase()
-                    }
-                )
-        }
-        scope.todoEventModel.refreshResponse.subscribe { value = "" }
-
-    }
-
-    init {
-        title = displayArea.name
     }
 
     override val root = borderpane {
@@ -66,7 +41,8 @@ class ToDoListView : Fragment() {
 
         center {
             table = tableview {
-                //                id = "table"
+                id = "table"
+
                 readonlyColumn("Description", ToDo::description) {
                     prefWidth = 300.0
                 }
@@ -91,7 +67,7 @@ class ToDoListView : Fragment() {
                                         else
                                             LocalDate.now()
                                     val updatedToDo = todo.copy(dateCompleted = dateCompleted)
-                                    scope.todoEventModel.updateRequest.onNext(token to updatedToDo)
+                                    eventModel.updateRequest.onNext(updatedToDo)
                                 }
                             }
                         }
@@ -108,7 +84,7 @@ class ToDoListView : Fragment() {
                     }
                 }
 
-                onSelectionChange { it?.let { scope.todoSelected.onNext(it) } }
+                onSelectionChange { it?.let { selected -> eventModel.itemSelected.onNext(selected) } }
             }
         }
 
@@ -119,19 +95,15 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.PLUS).apply {
                         glyphSize = 14.0
                     }
-                    val hotkey = if (token == Token.ToDo) "ctrl+a" else "alt+a"
+                    val hotkey = if (displayArea == DisplayArea.ToDos) "ctrl+a" else "alt+a"
                     tooltip("Add item ($hotkey)")
                     shortcut(hotkey)
                     action {
-                        find(
-                            type = ToDoEditor::class,
-                            scope = scope,
-                            params = mapOf(
-                                "mode" to EditorMode.Add,
-                                "todo" to ToDo.default(),
-                                "displayArea" to displayArea,
-                                "token" to token
-                            )
+                        ToDoEditor(
+                            eventModel = eventModel,
+                            mode = EditorMode.Add,
+                            todo = ToDo.default(),
+                            displayArea = displayArea
                         ).openModal(
                             primaryStage.style,
                             Modality.WINDOW_MODAL
@@ -143,13 +115,13 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.TRASH_ALT).apply {
                         glyphSize = 14.0
                     }
-                    val hotkey = if (token == Token.ToDo) "ctrl+x" else "alt+x"
+                    val hotkey = if (displayArea == DisplayArea.ToDos) "ctrl+x" else "alt+x"
                     tooltip("Delete selected item ($hotkey)")
                     shortcut(hotkey)
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
-                            if (scope.confirmationService.confirm("Are you sure you want to delete '${todo.description}'?"))
-                                scope.todoEventModel.deleteRequest.onNext(token to todo)
+                            if (confirmationService.confirm("Are you sure you want to delete '${todo.description}'?"))
+                                eventModel.deleteRequest.onNext(todo)
                         }
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
@@ -159,30 +131,26 @@ class ToDoListView : Fragment() {
                     graphic = FontAwesomeIconView(FontAwesomeIcon.REFRESH).apply {
                         glyphSize = 14.0
                     }
-                    val hotkey = if (token == Token.ToDo) "ctrl+r" else "alt+r"
+                    val hotkey = if (displayArea == DisplayArea.ToDos) "ctrl+r" else "alt+r"
                     tooltip("Refresh ($hotkey)")
                     shortcut(hotkey)
-                    action { scope.todoEventModel.refreshRequest.onNext(token) }
+                    action { eventModel.refreshRequest.onNext(Unit) }
                 }
                 button {
                     id = "edit-button"
                     graphic = FontAwesomeIconView(FontAwesomeIcon.EDIT).apply {
                         glyphSize = 14.0
                     }
-                    val hotkey = if (token == Token.ToDo) "ctrl+e" else "alt+e"
+                    val hotkey = if (displayArea == DisplayArea.ToDos) "ctrl+e" else "alt+e"
                     tooltip("Edit item ($hotkey)")
                     shortcut(hotkey)
                     action {
                         table.selectionModel.selectedItem?.let { todo ->
-                            find(
-                                type = ToDoEditor::class,
-                                scope = scope,
-                                params = mapOf(
-                                    "mode" to EditorMode.Edit,
-                                    "todo" to todo,
-                                    "displayArea" to displayArea,
-                                    "token" to token
-                                )
+                            ToDoEditor(
+                                eventModel = eventModel,
+                                mode = EditorMode.Edit,
+                                todo = ToDo.default(),
+                                displayArea = displayArea
                             ).openModal(
                                 primaryStage.style,
                                 Modality.WINDOW_MODAL
@@ -191,21 +159,31 @@ class ToDoListView : Fragment() {
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
                 }
-                textfield(filter) { id = "filter-text" }
+                textfield("") {
+                    id = "filter-text"
+                    textProperty().addListener { observable, oldValue, newValue ->
+                        if (newValue.isNullOrBlank())
+                            eventModel.refreshRequest.onNext(Unit)
+                        else
+                            eventModel.filterRequest.onNext { todo: ToDo ->
+                                newValue.toLowerCase() in todo.description.toLowerCase()
+                            }
+                    }
+                }
                 checkbox("Today", todayOnly)
             }
         }
 
-        scope.todoEventModel.addResponse.subscribeBy(
-            onNext = { (id, todo) ->
+        eventModel.addResponse.subscribeBy(
+            onNext = { todo ->
                 if (todayOnly.value) {
-                    if (id == token && todo.display)
+                    if (todo.display)
                         table.items.add(todo)
                 } else {
                     table.items.add(todo)
                 }
             },
-            onError = scope.alertService::alertError
+            onError = alertService::alertError
         )
         fun updateItems(todos: List<ToDo>) {
             val newToDos =
@@ -221,23 +199,23 @@ class ToDoListView : Fragment() {
                 table.items.setAll(newToDos)
             }
         }
-        scope.todoEventModel.refreshResponse.subscribeBy(
-            onNext = { (_, todos) ->
+        eventModel.refreshResponse.subscribeBy(
+            onNext = { todos ->
                 updateItems(todos = todos)
             },
-            onError = scope.alertService::alertError
+            onError = alertService::alertError
         )
-        scope.todoEventModel.filterResponse.subscribeBy(
-            onNext = { (_, todos) ->
+        eventModel.filterResponse.subscribeBy(
+            onNext = { todos ->
                 updateItems(todos = todos)
             },
-            onError = scope.alertService::alertError
+            onError = alertService::alertError
         )
-        scope.todoEventModel.deleteResponse.subscribeBy(
-            onNext = { (_, todo) ->
+        eventModel.deleteResponse.subscribeBy(
+            onNext = { todo ->
                 table.items.removeIf { it.id == todo.id }
             },
-            onError = scope.alertService::alertError
+            onError = alertService::alertError
         )
         fun updateItem(todo: ToDo) {
             val ix = table.items.indexOfFirst { it.id == todo.id }
@@ -246,21 +224,19 @@ class ToDoListView : Fragment() {
             else
                 table.items[ix] = todo
         }
-        scope.todoEventModel.updateResponse.subscribeBy(
-            onNext = { (_, todo) ->
-                if (todo.display && todo.displayArea == displayArea) {
-                    if (todayOnly.value) {
-                        if (todo.display) {
-                            updateItem(todo)
-                        } else {
-                            table.items.removeIf { it.id == todo.id }
-                        }
-                    } else {
+        eventModel.updateResponse.subscribeBy(
+            onNext = { todo ->
+                if (todayOnly.value) {
+                    if (todo.display) {
                         updateItem(todo)
+                    } else {
+                        table.items.removeIf { it.id == todo.id }
                     }
+                } else {
+                    updateItem(todo)
                 }
             },
-            onError = scope.alertService::alertError
+            onError = alertService::alertError
         )
     }
 }

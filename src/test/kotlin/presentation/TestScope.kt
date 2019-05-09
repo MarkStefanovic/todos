@@ -92,18 +92,20 @@ fun setUpTestScope(): AppScope {
         )
     )
     val scheduler = TrampolineSchedulerProvider()
-    val eventModel = RepositoryEventModel<ToDo>(schedulerProvider = scheduler)
+    val todoEventModel = RepositoryEventModel<ToDo>(schedulerProvider = scheduler)
+    val reminderEventModel = RepositoryEventModel<ToDo>(schedulerProvider = scheduler)
     val scope = AppScope(
-        todoEventModel = eventModel,
+        todoEventModel = todoEventModel,
+        reminderEventModel = reminderEventModel,
         alertService = DummyAlertService(),
         confirmationService = DummyConfirmationService()
     )
-    val controller = ToDoController(
+    val reminderController = ToDoController(
         alertService = alertService,
-        eventModel = eventModel,
+        eventModel = reminderEventModel,
         repository = repository,
         schedulerProvider = scheduler
     )
-    controller.start()
+    reminderController.start()
     return scope
 }

@@ -13,12 +13,11 @@ class ToDoController(
     repository = repository,
     schedulerProvider = schedulerProvider
 ) {
-    override fun update(request: Pair<Identifier, ToDo>) {
-        val (token, item) = request
+    override fun update(item: ToDo) {
         if (item.frequency == "Once" && item.complete) {
-            eventModel.deleteRequest.onNext(token to item)
+            eventModel.deleteRequest.onNext(item)
         } else {
-            super.update(token to item)
+            super.update(item)
         }
     }
 }

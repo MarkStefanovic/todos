@@ -1,7 +1,7 @@
 package presentation
 
 import app.AppScope
-import app.Token
+import domain.DisplayArea
 import javafx.scene.text.Font.font
 import javafx.scene.text.FontWeight
 import tornadofx.*
@@ -9,8 +9,20 @@ import tornadofx.*
 class MainView: View("ToDo List") {
     override val scope = super.scope as AppScope
 
-    private val todos = find<ToDoListView>(scope = scope, params = mapOf("token" to Token.ToDo))
-    private val reminders = find<ToDoListView>(scope = scope, params = mapOf("token" to Token.Reminder))
+    private val todos = ToDoListView(
+        alertService = scope.alertService,
+        confirmationService = scope.confirmationService,
+        displayArea = DisplayArea.ToDos,
+        eventModel = scope.todoEventModel
+    )
+
+    private val reminders = ToDoListView(
+        alertService = scope.alertService,
+        confirmationService = scope.confirmationService,
+        displayArea = DisplayArea.Reminders,
+        eventModel = scope.reminderEventModel
+    )
+
     override val root = borderpane {
         val labelHeaderFont = font("Arial", FontWeight.BOLD, 14.0)
         center {
@@ -40,7 +52,8 @@ class MainView: View("ToDo List") {
             }
         }
 
-        scope.todoEventModel.refreshRequest.onNext(Token.ToDo)
+        scope.todoEventModel.refreshRequest.onNext(Unit)
+        scope.reminderEventModel.refreshRequest.onNext(Unit)
     }
 
     override fun onDock() {

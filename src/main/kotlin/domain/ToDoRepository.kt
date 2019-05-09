@@ -2,9 +2,16 @@ package domain
 
 import framework.DatabaseService
 import framework.Repository
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
 
-class ToDoRepository(private val db: DatabaseService) : Repository<ToDo>() {
+class ToDoRepository(
+    private val db: DatabaseService,
+    private val displayArea: DisplayArea
+) : Repository<ToDo>() {
+
     override fun add(newItem: ToDo): ToDo? =
         db.execute {
             ToDos.insert {
@@ -57,16 +64,25 @@ class ToDoRepository(private val db: DatabaseService) : Repository<ToDo>() {
         return byId(item.id)
     }
 
-    override fun all(): List<ToDo>? =
+    override fun all(): List<ToDo> =
         db.execute {
-            ToDos.selectAll()
+            ToDos
+                .select { ToDos.displayArea eq displayArea.name }
                 .map { it.toToDo() }
                 .filterNotNull()
                 .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
-        }
+        } ?: emptyList()
 
-    override fun filter(criteria: (ToDo) -> Boolean): List<ToDo>? =
-        all()?.filter(criteria)
+//    override fun all(): List<ToDo>? =
+//        db.execute {
+//            ToDos.selectAll()
+//                .map { it.toToDo() }
+//                .filterNotNull()
+//                .sortedWith(compareBy(ToDo::nextDate, ToDo::description))
+//        }
+
+    override fun filter(criteria: (ToDo) -> Boolean): List<ToDo> =
+        all().filter(criteria)
 
     private fun byId(id: Int): ToDo? =
         db.execute {

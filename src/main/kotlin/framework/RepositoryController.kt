@@ -22,7 +22,7 @@ open class RepositoryController<T : Any>(
             onError = alertService::alertError
         )
         eventModel.refreshRequest.subscribeOn(schedulerProvider.io()).debounce(200, TimeUnit.MILLISECONDS).subscribeBy(
-            onNext = ::refresh,
+            onNext = { refresh() },
             onError = alertService::alertError
         )
         eventModel.updateRequest.subscribeOn(schedulerProvider.io()).subscribeBy(
@@ -35,37 +35,33 @@ open class RepositoryController<T : Any>(
         )
     }
 
-    open fun add(request: Pair<Identifier, T>) {
-        val (token, item) = request
+    open fun add(item: T) {
         repository.add(item)?.let { newItem ->
-            eventModel.addResponse.onNext(token to newItem)
+            eventModel.addResponse.onNext(newItem)
         }
     }
 
-    open fun delete(request: Pair<Identifier, T>) {
-        val (token, item) = request
-        repository.delete(item)?.let { deletedId ->
-            eventModel.deleteResponse.onNext(token to item)
+    open fun delete(item: T) {
+        repository.delete(item)?.let {
+            eventModel.deleteResponse.onNext(item)
         }
     }
 
-    open fun refresh(token: Identifier) {
-        repository.all()?.let { items ->
-            eventModel.refreshResponse.onNext(token to items)
+    open fun refresh() {
+        repository.all().let { items ->
+            eventModel.refreshResponse.onNext(items)
         }
     }
 
-    open fun update(request: Pair<Identifier, T>) {
-        val (token, item) = request
+    open fun update(item: T) {
         repository.update(item)?.let { updatedItem ->
-            eventModel.updateResponse.onNext(token to updatedItem)
+            eventModel.updateResponse.onNext(updatedItem)
         }
     }
 
-    open fun filter(request: Pair<Identifier, (T) -> Boolean>) {
-        val (token, criteria) = request
-        repository.filter(criteria)?.let { items ->
-            eventModel.filterResponse.onNext(token to items)
+    open fun filter(predicate: (T) -> Boolean) {
+        repository.filter(predicate).let { items ->
+            eventModel.filterResponse.onNext(items)
         }
     }
 }

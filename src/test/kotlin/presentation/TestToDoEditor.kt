@@ -1,10 +1,8 @@
 package presentation
 
 import app.AppScope
-import app.Token
 import domain.DisplayArea
 import domain.ToDo
-import framework.Identifier
 import io.reactivex.observers.BaseTestConsumer
 import io.reactivex.observers.TestObserver
 import javafx.scene.Scene
@@ -14,12 +12,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.testfx.api.FxToolkit
 import org.testfx.framework.junit5.ApplicationTest
-import tornadofx.*
 import java.time.LocalDate
 
 
 class TestToDoEditor : ApplicationTest() {
     private val today = LocalDate.now()
+
     private lateinit var stage: Stage
     private lateinit var scope: AppScope
     private lateinit var view: ToDoEditor
@@ -30,16 +28,12 @@ class TestToDoEditor : ApplicationTest() {
         scope = setUpTestScope()
     }
 
-    private fun openEditor(mode: EditorMode, todo: ToDo, displayArea: DisplayArea) {
-        view = find(
-            type = ToDoEditor::class,
-            scope = scope,
-            params = mapOf(
-                "mode" to mode,
-                "todo" to todo,
-                "displayArea" to displayArea,
-                "token" to Token.Reminder
-            )
+    private fun openEditor(mode: EditorMode, todo: ToDo) {
+        view = ToDoEditor(
+            eventModel = scope.reminderEventModel,
+            mode = mode,
+            todo = todo,
+            displayArea = DisplayArea.Reminders
         )
         interact {
             stage.scene = Scene(view.root)
@@ -57,7 +51,7 @@ class TestToDoEditor : ApplicationTest() {
             monthday = 12,
             displayArea = DisplayArea.Reminders
         )
-        openEditor(mode = EditorMode.Add, todo = todo, displayArea = DisplayArea.Reminders)
+        openEditor(mode = EditorMode.Add, todo = todo)
         assertEquals(view.title, "Add New Reminders")
     }
 
@@ -70,13 +64,13 @@ class TestToDoEditor : ApplicationTest() {
             monthday = 12,
             displayArea = DisplayArea.Reminders
         )
-        openEditor(mode = EditorMode.Edit, todo = todo, displayArea = DisplayArea.Reminders)
+        openEditor(mode = EditorMode.Edit, todo = todo)
         assertEquals(view.title, "Edit Reminders")
     }
 
     @Test
     fun `correct defaults on Add mode`() {
-        openEditor(mode = EditorMode.Add, todo = ToDo.default(), displayArea = DisplayArea.Reminders)
+        openEditor(mode = EditorMode.Add, todo = ToDo.default())
         assertEquals("Once", view.frequencyField.value)
         assertEquals(today, view.onceField.value)
         assertEquals(today.monthValue, view.monthField.value)
@@ -93,7 +87,7 @@ class TestToDoEditor : ApplicationTest() {
             monthday = 12,
             displayArea = DisplayArea.Reminders
         )
-        openEditor(mode = EditorMode.Edit, todo = todo, displayArea = DisplayArea.Reminders)
+        openEditor(mode = EditorMode.Edit, todo = todo)
         assertEquals("Test", view.descriptionField.text)
         assertEquals("Yearly", view.frequencyField.value)
         assertEquals(LocalDate.of(today.year, 10, 12), view.onceField.value)
@@ -111,11 +105,11 @@ class TestToDoEditor : ApplicationTest() {
             monthday = 12,
             displayArea = DisplayArea.Reminders
         )
-        openEditor(mode = EditorMode.Edit, todo = todo, displayArea = DisplayArea.Reminders)
-        val observer = TestObserver<Pair<Identifier, ToDo>>()
-        scope.todoEventModel.updateResponse.subscribe(observer)
+        openEditor(mode = EditorMode.Edit, todo = todo)
+        val observer = TestObserver<ToDo>()
+        scope.reminderEventModel.updateResponse.subscribe(observer)
         clickOn(view.saveButton)
         observer.awaitCount(1, BaseTestConsumer.TestWaitStrategy.SLEEP_100MS, 5000)
-        observer.assertValue(Token.Reminder to todo)
+        observer.assertValue(todo)
     }
 }
