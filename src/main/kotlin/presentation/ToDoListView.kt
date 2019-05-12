@@ -12,6 +12,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.geometry.Pos
 import javafx.scene.control.TableView
+import javafx.scene.control.TextField
 import javafx.stage.Modality
 import mu.KLogging
 import presentation.Styles.Companion.centerAlignedCell
@@ -29,9 +30,11 @@ class ToDoListView(
     companion object : KLogging()
 
     private var table: TableView<ToDo> by singleAssign()
+    private var descriptionFilter: TextField by singleAssign()
 
     val todayOnly = SimpleBooleanProperty(true).apply {
         onChange {
+            descriptionFilter.text = ""
             eventModel.refreshRequest.onNext(Unit)
         }
     }
@@ -159,7 +162,7 @@ class ToDoListView(
                     }
                     enableWhen(table.selectionModel.selectedItemProperty().isNotNull)
                 }
-                textfield("") {
+                descriptionFilter = textfield("") {
                     id = "filter-text"
                     textProperty().addListener { observable, oldValue, newValue ->
                         if (newValue.isNullOrBlank())
