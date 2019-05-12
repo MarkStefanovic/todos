@@ -6,8 +6,8 @@ import javafx.scene.image.Image
 import javafx.stage.Stage
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import presentation.MainView
 import presentation.Styles
 import services.AsyncSchedulerProvider
@@ -54,10 +54,10 @@ class MyApp : App(MainView::class, Styles::class) {
 
         // insert initial sql rows if creating new db
         db.execute {
-            if (!ToDos.exists()) {
-                SchemaUtils.create(ToDos)
-                val initialRecords = holidays.union(birthdays)
-                initialRecords.forEach { todo ->
+            SchemaUtils.create(ToDos)
+            val initialRecords = holidays.union(birthdays)
+            initialRecords.forEach { todo ->
+                if (ToDos.select { ToDos.description eq todo.description }.count() == 0) {
                     ToDos.insert {
                         it[description] = todo.description
                         it[frequency] = todo.frequency

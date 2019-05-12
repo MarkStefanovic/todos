@@ -60,6 +60,10 @@ val holidays: Set<ToDo> = setOf(
         weekday = DayOfWeek.THURSDAY.value, advanceNotice = 14, expireDays = 3, displayArea = DisplayArea.Reminders
     ),
     ToDo.default().copy(
+        description = "Black Friday", frequency = "Irregular", month = 11, weekNumber = 4,
+        weekday = DayOfWeek.FRIDAY.value, advanceNotice = 14, expireDays = 3, displayArea = DisplayArea.Reminders
+    ),
+    ToDo.default().copy(
         description = "Christmas", frequency = "Yearly", month = 12, monthday = 25, advanceNotice = 14, expireDays = 3,
         displayArea = DisplayArea.Reminders
     ),
@@ -76,8 +80,16 @@ val holidays: Set<ToDo> = setOf(
         weekday = DayOfWeek.MONDAY.value, advanceNotice = 14, expireDays = 3, displayArea = DisplayArea.Reminders
     ),
     ToDo.default().copy(
+        description = "Martin Luther King Jr. Day", frequency = "Irregular", month = 1, weekNumber = 3,
+        weekday = DayOfWeek.MONDAY.value, advanceNotice = 14, expireDays = 3, displayArea = DisplayArea.Reminders
+    ),
+    ToDo.default().copy(
         description = "New Year's", frequency = "Yearly", month = 1, monthday = 1, advanceNotice = 14, expireDays = 3,
         displayArea = DisplayArea.Reminders
+    ),
+    ToDo.default().copy(
+        description = "Presidents' Day", frequency = "Irregular", month = 2, weekNumber = 3,
+        weekday = DayOfWeek.MONDAY.value, advanceNotice = 14, expireDays = 3, displayArea = DisplayArea.Reminders
     ),
     ToDo.default().copy(
         description = "Easter", frequency = "Easter", advanceNotice = 14, expireDays = 3,
