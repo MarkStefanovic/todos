@@ -187,6 +187,10 @@ class ToDoEditor(
                             startDate = startDateField.value,
                             days = daysField.value
                         )
+                        "Irregular" -> baseNewToDo.copy(
+                            advanceNotice = advanceNoticeField.value,
+                            expireDays = expireDaysField.value
+                        )
                         else -> throw NotImplementedError()
                     }
                     if (mode == EditorMode.Edit) {
